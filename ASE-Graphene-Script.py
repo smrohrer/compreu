@@ -37,8 +37,14 @@ def print_atoms(atoms):
     return out
 
 def calc_parameters(calculation_type, basis_set, kwargs, charge, multiplicity):
-    print string.rjust("!", 4), string.rjust(calculation_type, 4), string.rjust(basis_set, 4), string.rjust(kwargs, 4)
-    print string.rjust("* xyz", 4), string.rjust(charge, 4), string.rjust(multiplicity, 4)
+    if sum(atoms.get_atomic_numbers()) % 2 == 1:
+        spin= "! HF"
+    elif sum(atoms.get_atomic_numbers()) % 2 == 0:
+        spin= "! UHF"
+    out=''
+    parameters= '{0}\t{1}\t{2}\t{3}'.format(spin, calculation_type, basis_set, charge, multiplicity)
+    out=out+parameters
+    return out
     
 
     
