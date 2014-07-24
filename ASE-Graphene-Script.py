@@ -36,23 +36,24 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def calc_parameters(calculation_type="", basis_set="B3LYP6 SVP", charge="0", multiplicity="1"):
-    if sum(atoms.get_atomic_numbers()) % 2 == 1:
-        spin= "! HF"
-    elif sum(atoms.get_atomic_numbers()) % 2 == 0:
-        spin= "! UHF"
+def orca_parameters(charge="0", multiplicity="2"):
+    # if sum(atoms.get_atomic_numbers()) % 2 == 1:
+    #        spin= "! HF"
+    # elif sum(atoms.get_atomic_numbers()) % 2 == 0:
+    #        spin= "! UHF"
     out=''
-    parameters= '{0}\t{1}\t{2}\t{3}\t{4}'.format(spin, calculation_type, basis_set, charge, multiplicity)
-    out=out+parameters
+    parameters0= '{0}\t{1}\t{2}\n{3}\n'.format("%method", "method", "am1", "end")
+    parameters1='{0}\t{1}\t{2}\t{3}'.format("*", "xyz", charge, multiplicity)
+    out=out+parameters0+parameters1
     return out
     
 
     
 atoms=build_sheet(1,1)
 nitrogenate(atoms, 0)
-print calc_parameters()
+print orca_parameters()
 print print_atoms(atoms)
-view(atoms, viewer='avogadro')
+#view(atoms, viewer='avogadro')
 
 # <codecell>
 
