@@ -9,7 +9,7 @@ import numpy as np
 
 np.set_printoptions(precision=3,suppress=True)
 
-def build_sheet(nx, nz):
+def build_sheet(nx, nz='nx'):
     nx=nx+1
     basic_cell= Atoms('C4', 
         positions=[[3.11488, 2.50000, 0.71000], 
@@ -36,13 +36,13 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def calc_parameters(calculation_type, basis_set, kwargs, charge, multiplicity):
+def calc_parameters(calculation_type="", basis_set="B3LYP6 SVP", charge="0", multiplicity="1"):
     if sum(atoms.get_atomic_numbers()) % 2 == 1:
         spin= "! HF"
     elif sum(atoms.get_atomic_numbers()) % 2 == 0:
         spin= "! UHF"
     out=''
-    parameters= '{0}\t{1}\t{2}\t{3}'.format(spin, calculation_type, basis_set, charge, multiplicity)
+    parameters= '{0}\t{1}\t{2}\t{3}\t{4}'.format(spin, calculation_type, basis_set, charge, multiplicity)
     out=out+parameters
     return out
     
@@ -50,6 +50,7 @@ def calc_parameters(calculation_type, basis_set, kwargs, charge, multiplicity):
     
 atoms=build_sheet(1,1)
 nitrogenate(atoms, 0)
+print calc_parameters()
 print print_atoms(atoms)
 view(atoms, viewer='avogadro')
 
