@@ -9,7 +9,7 @@ import numpy as np
 
 np.set_printoptions(precision=3,suppress=True)
 
-def build_sheet(nx, nz=nx):
+def build_sheet(nx, nz):
     nx=nx+1
     basic_cell= Atoms('C4', 
         positions=[[3.11488, 2.50000, 0.71000], 
