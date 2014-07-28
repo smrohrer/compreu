@@ -6,6 +6,10 @@
 from ase import Atoms
 from ase.visualize import view
 import numpy as np
+from cclib.parser import ccopen
+from cllib.parser import ORCA
+import logging
+
 
 np.set_printoptions(precision=3,suppress=True)
 
@@ -47,6 +51,11 @@ def orca_parameters(charge="0", multiplicity="2"):
     out=out+parameters0+parameters1
     return out
     
+def parse(filename, cclib_attribute):
+    filename= "filename.txt"
+    myfile= ccopen(filename)
+    data = myfile.parse()
+    data.cclib_attribute
 
     
 atoms=build_sheet(1,1)
