@@ -7,7 +7,7 @@ from ase import Atoms
 from ase.visualize import view
 import numpy as np
 from cclib.parser import ccopen
-from cllib.parser import ORCA
+from cclib.parser import ORCA
 import logging
 
 
@@ -15,6 +15,7 @@ np.set_printoptions(precision=3,suppress=True)
 
 def build_sheet(nx, nz='nx'):
     nx=nx+1
+    nz=(nz+1)/2
     basic_cell= Atoms('C4', 
         positions=[[3.11488, 2.50000, 0.71000], 
                [4.34463, 2.50000, 1.42000], 
@@ -58,11 +59,11 @@ def parse(filename, cclib_attribute):
     data.cclib_attribute
 
     
-atoms=build_sheet(1,1)
+atoms=build_sheet(3,3)
 nitrogenate(atoms, 0)
-print orca_parameters()
-print print_atoms(atoms)
-#view(atoms, viewer='avogadro')
+#print orca_parameters()
+#print print_atoms(atoms)
+view(atoms, viewer='avogadro')
 
 # <codecell>
 
