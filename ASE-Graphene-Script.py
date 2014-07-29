@@ -41,19 +41,25 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def orca_parameters(charge="0", multiplicity="2"):
+def make_orca(filename="filename.inp", charge="0", multiplicity="2", method="am1"):
     # if sum(atoms.get_atomic_numbers()) % 2 == 1:
     #        spin= "! HF"
     # elif sum(atoms.get_atomic_numbers()) % 2 == 0:
     #        spin= "! UHF"
+
     out=''
-    parameters0= '{0}\t{1}\t{2}\n{3}\n'.format("%method", "method", "am1", "end")
-    parameters1='{0}\t{1}\t{2}\t{3}'.format("*", "xyz", charge, multiplicity)
+    parameters0= '{0}\t{1}\t{2}\n{3}\n'.format("%method", "method", method, "end")
+    parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
     out=out+parameters0+parameters1
-    return out
+    end_of_atom_coordinates="*"
+    with open(filename, 'a+') as f:
+        f.write(out)
+        f.write(print_atoms(atoms))
+        f.write(end_of_atom_coordinates)
+
+
     
 def parse(filename, cclib_attribute):
-    filename= "filename.txt"
     myfile= ccopen(filename)
     data = myfile.parse()
     data.cclib_attribute
@@ -61,9 +67,8 @@ def parse(filename, cclib_attribute):
     
 atoms=build_sheet(3,3)
 nitrogenate(atoms, 0)
-#print orca_parameters()
-#print print_atoms(atoms)
-view(atoms, viewer='avogadro')
+make_orca()
+#view(atoms, viewer='avogadro')
 
 # <codecell>
 
