@@ -9,6 +9,8 @@ import numpy as np
 from cclib.parser import ccopen
 from cclib.parser import ORCA
 import logging
+from scipy.spatial import KDTree
+from collections import Counter
 
 
 np.set_printoptions(precision=3,suppress=True)
@@ -64,11 +66,33 @@ def parse(filename, cclib_attribute):
     data = myfile.parse()
     data.cclib_attribute
 
+def count_bonded_adj_atoms(atoms):
+    bonded_3, bonded_2 = ([] for i in range(2))
+    bonded_3_atoms = np.array(bonded_3)
+    bonded_2_atoms = np.array(bonded_2)
+    tree = KDTree(atoms.get_positions())
+    list_tree = list(tree.query_pairs(1.430))
+    dictionary_count=Counter(elem[0] for elem in list_tree) + Counter(elem[1] for elem in list_tree)
+    for k, v in dictionary_count.iteritems():
+        if v == 3:
+            bonded_3_atoms = np.append(bonded_3_atoms, k)
+        elif v == 2:
+            bonded_2_atoms = np.append(bonded_2_atoms, k)
+        else:
+            pass
+    print "Index bonded to 3 atoms", 
+    print bonded_3_atoms
+    print "Index bonded to 2 atoms",
+    print bonded_2_atoms
+    
+
+
     
 atoms=build_sheet(3,3)
 nitrogenate(atoms, 0)
-make_orca()
+#make_orca()
 #view(atoms, viewer='avogadro')
+count_bonded_adj_atoms(atoms)
 
 # <codecell>
 
