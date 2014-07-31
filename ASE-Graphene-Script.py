@@ -3,7 +3,7 @@
 
 # <codecell>
 
-from ase import Atoms
+from ase import Atoms, Atom
 from ase.visualize import view
 import numpy as np
 from cclib.parser import ccopen
@@ -11,6 +11,7 @@ from cclib.parser import ORCA
 import logging
 from scipy.spatial import KDTree
 from collections import Counter
+import subprocess
 
 
 np.set_printoptions(precision=3,suppress=True)
@@ -35,6 +36,7 @@ def nitrogenate(sheet, position):
     symbols = atoms.get_chemical_symbols()
     symbols[position] = 'N'
     sheet.set_chemical_symbols(symbols)
+    return position
     
 def print_atoms(atoms):
     out=''
@@ -43,33 +45,34 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def make_orca(filename="filename.inp", charge="0", multiplicity="2", method="am1"):
+def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1"):
     # if sum(atoms.get_atomic_numbers()) % 2 == 1:
     #        spin= "! HF"
     # elif sum(atoms.get_atomic_numbers()) % 2 == 0:
     #        spin= "! UHF"
-
     out=''
     parameters0= '{0}\t{1}\t{2}\n{3}\n'.format("%method", "method", method, "end")
     parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
     out=out+parameters0+parameters1
     end_of_atom_coordinates="*"
-    with open(filename, 'a+') as f:
+    with open(filename, 'w') as f:
         f.write(out)
         f.write(print_atoms(atoms))
         f.write(end_of_atom_coordinates)
-
+    subprocess.call("/home/matthew/orca/orca "+ filename + " > temp.out", shell=True)
+    return parse("temp.out")
     
-def parse(filename, cclib_attribute):
+def parse(filename):
     myfile= ccopen(filename)
     data = myfile.parse()
-    data.cclib_attribute
+    return data
+
+def saturate(atoms = 'atoms'):
+    __bond3__, __bond2__, __saturate__ = (np.array([]) for i in range(3))
     
-def count_bonded_adj_atoms(atoms):
-    __bond3__, __bond2__, saturate = (np.array([]) for i in range(3))
-    saturate = []
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
+    print list_tree
     dictionary_count=Counter(elem[0] for elem in list_tree) + Counter(elem[1] for elem in list_tree)
     for k, v in dictionary_count.iteritems():
         if v == 3:
@@ -81,17 +84,66 @@ def count_bonded_adj_atoms(atoms):
     print __bond3__
     print __bond2__
     for i in range(__bond2__.size):
-        saturate = np.append(saturate, (atoms.get_positions()[__bond2__.item(i),:]))
-    saturate = np.reshape(saturate, (saturate.size/3, 3))
+        __saturate__ = np.append(__saturate__, (atoms.get_positions()[__bond2__.item(i),:]))
+    __saturate__ = np.reshape(__saturate__, (__saturate__.size/3, 3))
+    print __saturate__
     
 
+def daves_super_saturate(atoms):
+    pos = atoms.get_positions()
+    tree = KDTree(atoms.get_positions())
+    list_tree = list(tree.query_pairs(1.430))
+    bondedTo = [ [] for i in xrange(len(atoms))] 
+
+    for bond in list_tree:
+        bondedTo[bond[0]].append(bond[1])
+        bondedTo[bond[1]].append(bond[0])
+
+    Zs = atoms. get_atomic_numbers()
+# figure out what needs a hydrogen atom
+    for iatom in xrange(len(atoms)):
+        nbonds = len( bondedTo[iatom] )
+        Z = Zs[iatom]
+        if (Z,nbonds) == (6,2):
+            print "we should add H to atom ", iatom
+            
+
+            r0 = pos[iatom, :]
+            bond1 = pos[ bondedTo[iatom][0] , : ] - r0
+            bond2 = pos[ bondedTo[iatom][1],   :]  -r0
+            rH = -(bond1 + bond2)
+            rH = 1.09 * rH / np.linalg.norm(rH)
+            atoms.append(Atom('H',  r0+rH ))
+            
+def find_edge_atoms(atoms):
+    edge_atoms = []
+    pos = atoms.get_positions()
+    tree = KDTree(atoms.get_positions())
+    list_tree = list(tree.query_pairs(1.430))
+    bondedTo = [ [] for i in xrange(len(atoms))] 
+
+    for bond in list_tree:
+        bondedTo[bond[0]].append(bond[1])
+        bondedTo[bond[1]].append(bond[0])
+
+    Zs = atoms. get_atomic_numbers()
+    # figure out what needs a hydrogen atom
+    for iatom in xrange(len(atoms)):
+        nbonds = len( bondedTo[iatom] )
+        Z = Zs[iatom]
+        if (Z,nbonds) == (6,2):
+            edge_atoms.append(iatom)
+    return edge_atoms
+
+            
+            
+#for i in xrange(6):
 
     
-atoms=build_sheet(3,3)
+atoms = build_sheet(1,1)
 nitrogenate(atoms, 0)
-#make_orca()
-#view(atoms, viewer='avogadro')
-count_bonded_adj_atoms(atoms)
 
-# <codecell>
-
+daves_super_saturate(atoms)
+data = make_orca(atoms, filename="pyridine.inp")
+#view(atoms, viewer="avogadro")
+print data.atomcharges
