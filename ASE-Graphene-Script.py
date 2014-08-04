@@ -61,7 +61,7 @@ def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", meth
         f.write(end_of_atom_coordinates)
     subprocess.call("/home/matthew/orca/orca "+ filename + " > temp.out", shell=True)
     return parse("temp.out")
-    
+
 def parse(filename):
     myfile= ccopen(filename)
     data = myfile.parse()
@@ -135,15 +135,27 @@ def find_edge_atoms(atoms):
             edge_atoms.append(iatom)
     return edge_atoms
 
-            
-            
-#for i in xrange(6):
 
     
-atoms = build_sheet(1,1)
-nitrogenate(atoms, 0)
-
+atoms = build_sheet(3,3)
 daves_super_saturate(atoms)
-data = make_orca(atoms, filename="pyridine.inp")
+data = make_orca(atoms, filename="3x3graphene.inp")
+
+with open("results.txt", 'w') as r:
+    r.write("3x3 Graphene Sheet -- No Nitrogens\n")
+    #r.write(str(data.freeenergy))
+    r.write(str(data.moenergies[data.homos]))
+
+
 #view(atoms, viewer="avogadro")
-print data.atomcharges
+#print data.atomcharges
+
+edge_carbon_index = [6, 14, 22, 13, 21, 29]
+#for index_number in edge_carbon_index:
+#    nitrogenate(atoms, index_number)
+#    daves_super_saturate(atoms)
+#    data = make_orca(atoms, filename = "3x3sheetN%d" % index_number)
+#    with open("results.txt", 'a+') as r:
+#        r.write("3x3sheetN%d\n" % index_number)
+#        r.write(atoms.freeenergy)
+#        r.write
