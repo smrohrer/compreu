@@ -6,8 +6,7 @@
 from ase import Atoms, Atom
 from ase.visualize import view
 import numpy as np
-from cclib.parser import ccopen
-from cclib.parser import ORCA
+from cclib.parser import *
 import logging
 from scipy.spatial import KDTree
 from collections import Counter
@@ -143,19 +142,26 @@ data = make_orca(atoms, filename="3x3graphene.inp")
 
 with open("results.txt", 'w') as r:
     r.write("3x3 Graphene Sheet -- No Nitrogens\n")
-    #r.write(str(data.freeenergy))
-    r.write(str(data.moenergies[data.homos]))
+    r.write("Total SCF energy in eV:\t")
+    r.write(str(data.scfenergies))
+    r.write("\nMolecular orbital energy of HOMO in eV:\t")
+    moenergies_array = data.moenergies[0]
+    r.write(str(moenergies_array[data.homos]))
 
 
 #view(atoms, viewer="avogadro")
 #print data.atomcharges
 
 edge_carbon_index = [6, 14, 22, 13, 21, 29]
-#for index_number in edge_carbon_index:
-#    nitrogenate(atoms, index_number)
-#    daves_super_saturate(atoms)
-#    data = make_orca(atoms, filename = "3x3sheetN%d" % index_number)
-#    with open("results.txt", 'a+') as r:
-#        r.write("3x3sheetN%d\n" % index_number)
-#        r.write(atoms.freeenergy)
-#        r.write
+for index_number in edge_carbon_index:
+    atoms = build_sheet(3,3)
+    nitrogenate(atoms, index_number)
+    daves_super_saturate(atoms)
+    data = make_orca(atoms, filename = "3x3sheetN%d" % index_number)
+    with open("results.txt", 'a+') as r:
+        r.write("\n\n3x3sheetN%d\n" % index_number)
+        r.write("Total SCF energy in eV:\t")
+        r.write(str(data.scfenergies))
+        r.write("\nMolecular orbital energy of HOMO in eV:\t")
+        moenergies_array = data.moenergies[0]
+        r.write(str(moenergies_array[data.homos]))
