@@ -11,11 +11,12 @@ import logging
 from scipy.spatial import KDTree
 from collections import Counter
 import subprocess
+import os
 
 
 np.set_printoptions(precision=3,suppress=True)
 
-def build_sheet(nx, nz='nx'):
+def build_sheet(nx, nz):
     nx=nx+1
     nz=(nz+1)/2
     basic_cell= Atoms('C4', 
@@ -134,34 +135,47 @@ def find_edge_atoms(atoms):
             edge_atoms.append(iatom)
     return edge_atoms
 
-
-    
-atoms = build_sheet(3,3)
-daves_super_saturate(atoms)
-data = make_orca(atoms, filename="3x3graphene.inp")
-
-with open("results.txt", 'w') as r:
-    r.write("3x3 Graphene Sheet -- No Nitrogens\n")
-    r.write("Total SCF energy in eV:\t")
-    r.write(str(data.scfenergies))
-    r.write("\nMolecular orbital energy of HOMO in eV:\t")
-    moenergies_array = data.moenergies[0]
-    r.write(str(moenergies_array[data.homos]))
-
-
-#view(atoms, viewer="avogadro")
-#print data.atomcharges
-
-edge_carbon_index = [6, 14, 22, 13, 21, 29]
-for index_number in edge_carbon_index:
-    atoms = build_sheet(3,3)
-    nitrogenate(atoms, index_number)
+def edge_nitrogens(nx="1", nz="1"):
+    atoms = build_sheet(nx, nz)
     daves_super_saturate(atoms)
-    data = make_orca(atoms, filename = "3x3sheetN%d" % index_number)
-    with open("results.txt", 'a+') as r:
-        r.write("\n\n3x3sheetN%d\n" % index_number)
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz))
+    os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
+    os.chdir("/home/matthew/compreu/%dx%dsheet" % (nx, nz))
+
+    with open("%dx%d_edge_results.txt" % (nx, nz), 'w') as r:
+        r.write("%dx%d Graphene Sheet -- No Nitrogens\n" % (nx, nz))
         r.write("Total SCF energy in eV:\t")
         r.write(str(data.scfenergies))
         r.write("\nMolecular orbital energy of HOMO in eV:\t")
         moenergies_array = data.moenergies[0]
         r.write(str(moenergies_array[data.homos]))
+        r.write("\nMolecular orbital energy of LUMO in eV:\t")
+        almost_LUMO_index = data.homos
+        r.write(str(moenergies_array[almost_LUMO_index+1]))
+
+    edge_carbon_index = [6, 14, 22, 13, 21, 29]
+    for index_number in edge_carbon_index:
+        atoms = build_sheet(nx, nz)
+        nitrogenate(atoms, index_number)
+        daves_super_saturate(atoms)
+        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number))
+        with open("%dx%d_edge_results.txt" % (nx, nz), 'a+') as e:
+            e.write("\n\n%dx%dsheetN%d\n" % (nx, nz, index_number))
+            e.write("Total SCF energy in eV:\t")
+            e.write(str(data.scfenergies))
+            e.write("\nMolecular orbital energy of HOMO in eV:\t")
+            moenergies_array = data.moenergies[0]
+            e.write(str(moenergies_array[data.homos]))
+            e.write("\nMolecular orbital energy of LUMO in eV:\t")
+            almost_LUMO_index = data.homos
+            e.write(str(moenergies_array[almost_LUMO_index+1]))
+
+
+
+
+
+##There is some decimal bullshit going on here.  Check even values of nz in build_sheet
+#view(atoms, viewer="avogadro")
+atoms = build_sheet(3,3)
+edge_nitrogens(3,3)
+#print data.atomcharges
