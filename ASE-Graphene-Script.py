@@ -162,7 +162,7 @@ def calc_edge_nitrogens(nx="1", nz="1"):
     LUMO_energy = np.append(LUMO_energy, moenergies_array[almost_LUMO_index+1])
     LUMO_energy = np.repeat(LUMO_energy, atoms.get_number_of_atoms())
 
-##Writes energy values associated with single nitrogen substitions on the sheet
+##Writes energy values associated with single nitrogen substitions into energy arrays
     for index_number in edge_carbon_index:
         atoms = build_sheet(nx, nz)
         nitrogenate(atoms, index_number)
@@ -184,18 +184,17 @@ def calc_edge_nitrogens(nx="1", nz="1"):
             e.write(str(moenergies_array[almost_LUMO_index+1]))
 
     ##Creates colormaps
+    cm = plt.get_cmap("hot")
+    title_list =["SCF Energy Map", "HOMO Energy Map", "LUMO Energy Map"]
+    energy_list = [scf_energy, HOMO_energy, LUMO_energy]
+    plt.xlabel("Atom X Position on Sheet")
+    plt.ylabel("Atom Y Position on Sheet")
+
     for i in xrange(3):
-        cm = plt.get_cmap("hot")
-        title_list =["SCF Energy Map", "HOMO Energy Map", "LUMO Energy Map"]
-        energy_list = [scf_energy, HOMO_energy, LUMO_energy]
         plt.title(title_list[i])
-        plt.xlabel("Atom X Position on Sheet")
-        plt.ylabel("Atom Y Position on Sheet")
         COLOR = (energy_list[i]*energy_list[i].min())/energy_list[i].max()
         plt.scatter(x_pos, y_pos, c=COLOR, s=100, marker='o', edgecolors='none')
         plt.savefig(title_list[i]+".png")
-        plt.clf()
-        return COLOR
 
 
 
