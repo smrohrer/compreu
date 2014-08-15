@@ -185,7 +185,7 @@ def calc_edge_nitrogens(nx="1", nz="1"):
 
     ##Creates colormaps
     cm = plt.get_cmap("hot")
-    title_list =["SCF Energy Map", "HOMO Energy Map", "LUMO Energy Map"]
+    title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
     energy_list = [scf_energy, HOMO_energy, LUMO_energy]
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Y Position on Sheet")
