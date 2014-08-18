@@ -118,6 +118,8 @@ def find_edge_atoms(atoms):
 
 def calc_edge_nitrogens(nx="1", nz="1"):
     atoms = build_sheet(nx, nz)
+    no_hydrogen = atoms.get_positions()
+    no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
     data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1")
     os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
@@ -153,14 +155,14 @@ def calc_edge_nitrogens(nx="1", nz="1"):
 
 ##setup arrays for color map that will be utilized in draw_colormap function later    
     x_pos, y_pos, scf_energy, HOMO_energy, LUMO_energy = (np.array([]) for i in range(5))
-    x_pos = np.append(x_pos, atoms.get_positions()[:,0])
-    y_pos = np.append(y_pos, atoms.get_positions()[:,2])
+    x_pos = np.append(x_pos, no_hydrogen[:,0])
+    y_pos = np.append(y_pos, no_hydrogen[:,2])
     scf_energy = np.append(scf_energy, data.scfenergies)
-    scf_energy = np.repeat(scf_energy, atoms.get_number_of_atoms())
+    scf_energy = np.repeat(scf_energy, no_hydrogen_count)
     HOMO_energy = np.append(HOMO_energy, moenergies_array[data.homos])
-    HOMO_energy = np.repeat(HOMO_energy, atoms.get_number_of_atoms())
+    HOMO_energy = np.repeat(HOMO_energy, no_hydrogen_count)
     LUMO_energy = np.append(LUMO_energy, moenergies_array[almost_LUMO_index+1])
-    LUMO_energy = np.repeat(LUMO_energy, atoms.get_number_of_atoms())
+    LUMO_energy = np.repeat(LUMO_energy, no_hydrogen_count)
 
 ##Writes energy values associated with single nitrogen substitions into energy arrays
     for index_number in edge_carbon_index:
@@ -188,8 +190,8 @@ def calc_edge_nitrogens(nx="1", nz="1"):
     title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
     energy_list = [scf_energy, HOMO_energy, LUMO_energy]
     plt.xlabel("Atom X Position on Sheet")
-    plt.ylabel("Atom Y Position on Sheet")
-
+    plt.ylabel("Atom Z Position on Sheet")
+ 
     for i in xrange(3):
         plt.title(title_list[i])
         COLOR = (energy_list[i]*energy_list[i].min())/energy_list[i].max()
@@ -206,4 +208,5 @@ atoms = build_sheet(3, 3)
 
 #view(atoms, viewer="avogadro")
 calc_edge_nitrogens(3, 3)
+
 #print data.atomcharges
