@@ -116,12 +116,12 @@ def find_edge_atoms(atoms):
     return edge_atoms
 
 
-def calc_edge_nitrogens(nx="1", nz="1"):
+def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     atoms = build_sheet(nx, nz)
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
-    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1")
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method)
     os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
     os.chdir("/home/matthew/compreu/%dx%dsheet" % (nx, nz))
     moenergies_array = data.moenergies[0]
@@ -136,6 +136,7 @@ def calc_edge_nitrogens(nx="1", nz="1"):
         r.write(str(moenergies_array[data.homos]))
         r.write("\nMolecular orbital energy of LUMO in eV:\t")
         r.write(str(moenergies_array[almost_LUMO_index+1]))
+
 
 ##Pattern for describing zig-zag edge atom positions.  Creates edge_carbon_index array based on nx & nz parameters
     addition = [0]
@@ -157,6 +158,7 @@ def calc_edge_nitrogens(nx="1", nz="1"):
     x_pos, y_pos, scf_energy, HOMO_energy, LUMO_energy = (np.array([]) for i in range(5))
     x_pos = np.append(x_pos, no_hydrogen[:,0])
     y_pos = np.append(y_pos, no_hydrogen[:,2])
+    all_carbon_scf = data.scfenergies
     scf_energy = np.append(scf_energy, data.scfenergies)
     scf_energy = np.repeat(scf_energy, no_hydrogen_count)
     HOMO_energy = np.append(HOMO_energy, moenergies_array[data.homos])
@@ -170,13 +172,36 @@ def calc_edge_nitrogens(nx="1", nz="1"):
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
         #view(atoms, viewer="avogadro")
-        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1")
-        scf_energy[index_number] = data.scfenergies
-        HOMO_energy[index_number] = moenergies_array[data.homos]
-        LUMO_energy[index_number] = moenergies_array[almost_LUMO_index+1]
+        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method)
+
+    ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
+        nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
+        ##X & Y position array segregation
+        print x_pos
+        print index_number
+        nitrogenated_x_pos = np.append(nitrogenated_x_pos, x_pos[index_number])
+        #x_pos = np.delete(x_pos, index_number)
+        nitrogenated_y_pos = np.append(nitrogenated_y_pos, y_pos[index_number])
+        #y_pos = np.delete(y_pos, index_number)
+
+        ##Energies arrays segregation
+        nitrogenated_scf = np.append(nitrogenated_scf, (data.scfenergies-all_carbon_scf))
+       # scf_energy = np.delete(scf_energy, index_number)
+
+        nitrogenated_HOMO = np.append(nitrogenated_HOMO, moenergies_array[data.homos])
+       # HOMO_energy = np.delete(HOMO_energy, index_number)
+
+        nitrogenated_LUMO = np.append(nitrogenated_LUMO, moenergies_array[almost_LUMO_index+1])
+        #LUMO_energy = np.delete(LUMO_energy, index_number)
+
+        #scf_energy[index_number] = data.scfenergies
+        #HOMO_energy[index_number] = moenergies_array[data.homos]
+        #LUMO_energy[index_number] = moenergies_array[almost_LUMO_index+1]
 
 ##Writes results text file
         with open("%dx%d_edge_results.txt" % (nx, nz), 'a+') as e:
+            moenergies_array = data.moenergies[0]
+            almost_LUMO_index = data.homos
             e.write("\n\n%dx%dsheetN%d\n" % (nx, nz, index_number))
             e.write("Total SCF energy in eV:\t")
             e.write(str(data.scfenergies))
@@ -188,25 +213,28 @@ def calc_edge_nitrogens(nx="1", nz="1"):
     ##Creates colormaps
     cm = plt.get_cmap("hot")
     title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
-    energy_list = [scf_energy, HOMO_energy, LUMO_energy]
+    #energy_list = [scf_energy, HOMO_energy, LUMO_energy]
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Z Position on Sheet")
+    COLOR1 = (nitrogenated_scf-nitrogenated_scf.min())/(nitrogenated_scf.max()-nitrogenated_scf.min())
+    COLOR2 = (nitrogenated_HOMO-nitrogenated_HOMO.min())/(nitrogenated_HOMO.max()-nitrogenated_HOMO.min())
+    COLOR3 = (nitrogenated_LUMO-nitrogenated_LUMO.min())/(nitrogenated_LUMO.max()-nitrogenated_LUMO.min())
  
     for i in xrange(3):
         plt.title(title_list[i])
-        COLOR = (energy_list[i]*energy_list[i].min())/energy_list[i].max()
-        plt.scatter(x_pos, y_pos, c=COLOR, s=100, marker='o', edgecolors='none')
+        plt.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
+        plt.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c="COLOR%d" % i, s=100, marker='o', edgecolors='none')
         plt.savefig(title_list[i]+".png")
 
 
 
 
 
-atoms = build_sheet(3, 3)
+atoms = build_sheet(4, 3)
 #edge_carbon_list(atoms, 3)
 
 
-#view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 3)
+view(atoms, viewer="avogadro")
+calc_edge_nitrogens(4, 3)
 
 #print data.atomcharges
