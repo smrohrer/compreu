@@ -216,17 +216,15 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     #energy_list = [scf_energy, HOMO_energy, LUMO_energy]
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Z Position on Sheet")
-    COLOR1 = (nitrogenated_scf-nitrogenated_scf.min())/(nitrogenated_scf.max()-nitrogenated_scf.min())
-    COLOR2 = (nitrogenated_HOMO-nitrogenated_HOMO.min())/(nitrogenated_HOMO.max()-nitrogenated_HOMO.min())
-    COLOR3 = (nitrogenated_LUMO-nitrogenated_LUMO.min())/(nitrogenated_LUMO.max()-nitrogenated_LUMO.min())
+    COLOR0 = (nitrogenated_scf*nitrogenated_scf.min())/nitrogenated_scf.max()
+    COLOR1 = (nitrogenated_HOMO*nitrogenated_HOMO.min())/nitrogenated_HOMO.max()
+    COLOR2 = (nitrogenated_LUMO*nitrogenated_LUMO.min())/nitrogenated_LUMO.max()
  
     for i in xrange(3):
         plt.title(title_list[i])
         plt.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
-        plt.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c="COLOR%d" % i, s=100, marker='o', edgecolors='none')
+        plt.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=("COLOR%d" % i), s=100, marker='o', edgecolors='none')
         plt.savefig(title_list[i]+".png")
-
-
 
 
 
@@ -234,7 +232,7 @@ atoms = build_sheet(4, 3)
 #edge_carbon_list(atoms, 3)
 
 
-view(atoms, viewer="avogadro")
+#view(atoms, viewer="avogadro")
 calc_edge_nitrogens(4, 3)
 
 #print data.atomcharges
