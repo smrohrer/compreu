@@ -215,14 +215,18 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Z Position on Sheet")
     fig = plt.figure()
-    ax1 = fig.add_subplot(111)
+    ax = fig.add_subplot(111)
  
     for i in xrange(3):
         plt.title(title_list[i])
         COLOR = (energy_list[i]*energy_list[i].min())/(energy_list[i].max()*energy_list[i].min())
-        ax1.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
-        ax1.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=COLOR, s=100, marker='o', edgecolors='none')
+        ax.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
+        p = ax.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=COLOR, s=100, marker='o', edgecolors='none', label="something")
+        plt.colorbar(p)
         plt.savefig(title_list[i]+".png")
+
+        
+
 
 
 
