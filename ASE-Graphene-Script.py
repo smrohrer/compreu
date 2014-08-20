@@ -211,21 +211,17 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     ##Creates colormaps
     cm = plt.get_cmap("hot")
     title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
-    #energy_list = [scf_energy, HOMO_energy, LUMO_energy]
+    energy_list = [nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO]
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Z Position on Sheet")
-    print nitrogenated_scf
-    COLOR0 = (nitrogenated_scf-nitrogenated_scf.min())/(nitrogenated_scf.max()-nitrogenated_scf.min())
-    COLOR1 = (nitrogenated_HOMO-nitrogenated_HOMO.min())/(nitrogenated_HOMO.max()-nitrogenated_HOMO.min())
-    COLOR2 = (nitrogenated_LUMO*nitrogenated_LUMO.min())/(nitrogenated_LUMO.max()-nitrogenated_LUMO.min())
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
  
     for i in xrange(3):
         plt.title(title_list[i])
+        COLOR = (energy_list[i]*energy_list[i].min())/(energy_list[i].max()*energy_list[i].min())
         ax1.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
-        ax1.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c="COLOR%d % i", s=100, marker='s', edgecolors='none')
-
+        ax1.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=COLOR, s=100, marker='o', edgecolors='none')
         plt.savefig(title_list[i]+".png")
 
 
