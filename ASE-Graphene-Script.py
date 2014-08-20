@@ -148,8 +148,6 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     for number in xrange(2, 2*(nx+2), 2):
         multiplication.append(number)
         multiplication.append(number)
-    print multiplication
-    print addition
     for value in xrange(0, len(addition)):
         edge_carbon_index.append(nz*multiplication[value]+addition[value])
     edge_carbon_index.pop(1)
@@ -167,6 +165,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     LUMO_energy = np.repeat(LUMO_energy, no_hydrogen_count)
 
 ##Writes energy values associated with single nitrogen substitions into energy arrays
+    nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
     for index_number in edge_carbon_index:
         atoms = build_sheet(nx, nz)
         nitrogenate(atoms, index_number)
@@ -175,11 +174,10 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
         data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method)
 
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
-        nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
+        
         ##X & Y position array segregation
-        print x_pos
-        print index_number
         nitrogenated_x_pos = np.append(nitrogenated_x_pos, x_pos[index_number])
+    
         #x_pos = np.delete(x_pos, index_number)
         nitrogenated_y_pos = np.append(nitrogenated_y_pos, y_pos[index_number])
         #y_pos = np.delete(y_pos, index_number)
@@ -216,14 +214,18 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     #energy_list = [scf_energy, HOMO_energy, LUMO_energy]
     plt.xlabel("Atom X Position on Sheet")
     plt.ylabel("Atom Z Position on Sheet")
-    COLOR0 = (nitrogenated_scf*nitrogenated_scf.min())/nitrogenated_scf.max()
-    COLOR1 = (nitrogenated_HOMO*nitrogenated_HOMO.min())/nitrogenated_HOMO.max()
-    COLOR2 = (nitrogenated_LUMO*nitrogenated_LUMO.min())/nitrogenated_LUMO.max()
+    print nitrogenated_scf
+    COLOR0 = (nitrogenated_scf-nitrogenated_scf.min())/(nitrogenated_scf.max()-nitrogenated_scf.min())
+    COLOR1 = (nitrogenated_HOMO-nitrogenated_HOMO.min())/(nitrogenated_HOMO.max()-nitrogenated_HOMO.min())
+    COLOR2 = (nitrogenated_LUMO*nitrogenated_LUMO.min())/(nitrogenated_LUMO.max()-nitrogenated_LUMO.min())
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
  
     for i in xrange(3):
         plt.title(title_list[i])
-        plt.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
-        plt.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=("COLOR%d" % i), s=100, marker='o', edgecolors='none')
+        ax1.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
+        ax1.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c="COLOR%d % i", s=100, marker='s', edgecolors='none')
+
         plt.savefig(title_list[i]+".png")
 
 
