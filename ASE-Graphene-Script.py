@@ -212,19 +212,23 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
     cm = plt.get_cmap("hot")
     title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
     energy_list = [nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO]
-    plt.xlabel("Atom X Position on Sheet")
-    plt.ylabel("Atom Z Position on Sheet")
+    #plt.xlabel("Atom X Position on Sheet")
+    #plt.ylabel("Atom Z Position on Sheet")
     fig = plt.figure()
     ax = fig.add_subplot(111)
  
     for i in xrange(3):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.xlabel("Atom X Position on Sheet")
+        plt.ylabel("Atom Z Position on Sheet")
         plt.title(title_list[i])
         COLOR = (energy_list[i]*energy_list[i].min())/(energy_list[i].max()*energy_list[i].min())
         ax.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
         p = ax.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=COLOR, s=100, marker='o', edgecolors='none', label="something")
         plt.colorbar(p)
         plt.savefig(title_list[i]+".png")
-
+        plt.clf()
         
 
 
