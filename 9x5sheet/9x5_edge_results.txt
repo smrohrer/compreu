@@ -1,0 +1,94 @@
+9x5 Graphene Sheet -- No Nitrogens
+Total SCF energy in eV:	[-15512.793]
+Molecular orbital energy of HOMO in eV:	[-5.421]
+Molecular orbital energy of LUMO in eV:	[-3.964]
+
+9x5sheetN10
+Total SCF energy in eV:	[-15577.502]
+Molecular orbital energy of HOMO in eV:	[-5.663]
+Molecular orbital energy of LUMO in eV:	[-3.76]
+
+9x5sheetN21
+Total SCF energy in eV:	[-15577.502]
+Molecular orbital energy of HOMO in eV:	[-5.663]
+Molecular orbital energy of LUMO in eV:	[-3.76]
+
+9x5sheetN22
+Total SCF energy in eV:	[-15577.42]
+Molecular orbital energy of HOMO in eV:	[-5.671]
+Molecular orbital energy of LUMO in eV:	[-3.783]
+
+9x5sheetN33
+Total SCF energy in eV:	[-15577.42]
+Molecular orbital energy of HOMO in eV:	[-5.671]
+Molecular orbital energy of LUMO in eV:	[-3.783]
+
+9x5sheetN34
+Total SCF energy in eV:	[-15577.532]
+Molecular orbital energy of HOMO in eV:	[-5.717]
+Molecular orbital energy of LUMO in eV:	[-3.779]
+
+9x5sheetN45
+Total SCF energy in eV:	[-15577.532]
+Molecular orbital energy of HOMO in eV:	[-5.717]
+Molecular orbital energy of LUMO in eV:	[-3.779]
+
+9x5sheetN46
+Total SCF energy in eV:	[-15577.563]
+Molecular orbital energy of HOMO in eV:	[-5.827]
+Molecular orbital energy of LUMO in eV:	[-3.745]
+
+9x5sheetN57
+Total SCF energy in eV:	[-15577.563]
+Molecular orbital energy of HOMO in eV:	[-5.827]
+Molecular orbital energy of LUMO in eV:	[-3.745]
+
+9x5sheetN58
+Total SCF energy in eV:	[-15577.64]
+Molecular orbital energy of HOMO in eV:	[-5.879]
+Molecular orbital energy of LUMO in eV:	[-3.739]
+
+9x5sheetN69
+Total SCF energy in eV:	[-15577.64]
+Molecular orbital energy of HOMO in eV:	[-5.879]
+Molecular orbital energy of LUMO in eV:	[-3.739]
+
+9x5sheetN70
+Total SCF energy in eV:	[-15577.646]
+Molecular orbital energy of HOMO in eV:	[-5.877]
+Molecular orbital energy of LUMO in eV:	[-3.746]
+
+9x5sheetN81
+Total SCF energy in eV:	[-15577.646]
+Molecular orbital energy of HOMO in eV:	[-5.877]
+Molecular orbital energy of LUMO in eV:	[-3.746]
+
+9x5sheetN82
+Total SCF energy in eV:	[-15577.576]
+Molecular orbital energy of HOMO in eV:	[-5.826]
+Molecular orbital energy of LUMO in eV:	[-3.76]
+
+9x5sheetN93
+Total SCF energy in eV:	[-15577.576]
+Molecular orbital energy of HOMO in eV:	[-5.826]
+Molecular orbital energy of LUMO in eV:	[-3.76]
+
+9x5sheetN94
+Total SCF energy in eV:	[-15577.469]
+Molecular orbital energy of HOMO in eV:	[-5.742]
+Molecular orbital energy of LUMO in eV:	[-3.785]
+
+9x5sheetN105
+Total SCF energy in eV:	[-15577.469]
+Molecular orbital energy of HOMO in eV:	[-5.742]
+Molecular orbital energy of LUMO in eV:	[-3.785]
+
+9x5sheetN106
+Total SCF energy in eV:	[-15577.484]
+Molecular orbital energy of HOMO in eV:	[-5.685]
+Molecular orbital energy of LUMO in eV:	[-3.788]
+
+9x5sheetN117
+Total SCF energy in eV:	[-15577.484]
+Molecular orbital energy of HOMO in eV:	[-5.685]
+Molecular orbital energy of LUMO in eV:	[-3.788]
