@@ -46,23 +46,31 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1"):
+def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1", geometry_opt=False, output="temp.out"):
     # if sum(atoms.get_atomic_numbers()) % 2 == 1:
     #        spin= "! HF"
     # elif sum(atoms.get_atomic_numbers()) % 2 == 0:
     #        spin= "! UHF"
-    out=''
-    parameters0= '{0}\t{1}\t{2}\t{3}\n{4}'.format("%method", "method", method, "OPT", "end")
-    parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
-    out=out+parameters0+parameters1
-    end_of_atom_coordinates="*"
+    if geometry_opt == False:
+        out=''
+        parameters0= '{0}\t{1}\t{2}\n{3}'.format("%method", "method", method, "end")
+        parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
+        out=out+parameters0+parameters1
+        end_of_atom_coordinates="*"
+
+    elif geometry_opt == True:
+        out=''
+        parameters0= '{0}\t{1}\t{2}\t{3}\t{4}\n{5}'.format("%method", "method", method, "method", "OPT", "end")
+        parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
+        out=out+parameters0+parameters1
+        end_of_atom_coordinates="*"
+
     with open(filename, 'w') as f:
         f.write(out)
         f.write(print_atoms(atoms))
         f.write(end_of_atom_coordinates)
-    subprocess.call("/home/matthew/orca/orca "+ filename + " > temp.out", shell=True)
-    return parse("temp.out")
-    ##Move orca file into working directory
+    subprocess.call("/home/matthew/orca/orca "+ filename + " > " + output, shell=True)
+    return parse(output)
 
 def parse(filename):
     myfile= ccopen(filename)
@@ -117,12 +125,19 @@ def find_edge_atoms(atoms):
     return edge_atoms
 
 
-def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
+def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
+    if optimize_geometry == 0:
+        geom_param = False
+    elif optimize_geometry == 1:
+        geom_param = True
+    else:
+        geom_param = False
+
     atoms = build_sheet(nx, nz)
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
-    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method)
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
     os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
     os.chdir("/home/matthew/compreu/%dx%dsheet" % (nx, nz))
     moenergies_array = data.moenergies[0]
@@ -171,7 +186,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
         view(atoms, viewer="avogadro")
-        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method)
+        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
 
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
         
@@ -237,11 +252,13 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1"):
 #     atoms = build_sheet(9, item)
 #     calc_edge_nitrogens(9, item)
 
-atoms = build_sheet(2, 3)
+atoms = build_sheet(3, 3)
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(2, 3)
+calc_edge_nitrogens(3, 3, optimize_geometry=0)
 
 #print data.atomcharges
+
+##Check carbon displays on armchair side of energy Graph
