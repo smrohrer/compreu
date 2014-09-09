@@ -137,9 +137,9 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
-    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
     os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
     os.chdir("/home/matthew/compreu/%dx%dsheet" % (nx, nz))
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
     moenergies_array = data.moenergies[0]
 
 ##Writes carbon only sheet energy values
@@ -185,7 +185,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
         atoms = build_sheet(nx, nz)
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
-        view(atoms, viewer="avogadro")
+        #view(atoms, viewer="avogadro")
         data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
 
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
@@ -252,13 +252,13 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
 #     atoms = build_sheet(9, item)
 #     calc_edge_nitrogens(9, item)
 
-atoms = build_sheet(3, 3)
+atoms = build_sheet(3, 7)
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 3, optimize_geometry=0)
+calc_edge_nitrogens(3, 7, optimize_geometry=1)
 
 #print data.atomcharges
 
-##Check carbon displays on armchair side of energy Graph
+##Check carbon displays on armchair side of energy Graph === plt.axis('equal') is cutting off leftmost 2 carbons on armchair edge
