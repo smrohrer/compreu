@@ -243,7 +243,20 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
         plt.colorbar(p)
         plt.savefig(title_list[i]+".png")
         plt.clf()
+
+def rectangularize(atoms, nx, nz):
+    highest_pop_left = 2*nz-2
+    to_be_removed = []
+
+    for i in xrange(2, nz, 2):
+        to_be_removed.append(2*i-2)
+        to_be_removed.append(2*i-1)
         
+    to_be_removed = to_be_removed[::-1]
+
+    for entry in to_be_removed:
+        atoms.pop(entry)
+
 
 
 
@@ -252,12 +265,15 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
 #     atoms = build_sheet(9, item)
 #     calc_edge_nitrogens(9, item)
 
-atoms = build_sheet(3, 7)
+atoms = build_sheet(3, 3)
+rectangularize(atoms, 3, 3)
+
+
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 7, optimize_geometry=1)
+calc_edge_nitrogens(3, 3, optimize_geometry=1)
 
 #print data.atomcharges
 
