@@ -17,7 +17,7 @@ import matplotlib.cm as cm
 
 np.set_printoptions(precision=3,suppress=True)
 
-def build_sheet(nx, nz):
+def build_sheet(nx, nz, symmetry="0"):
     nx=nx+1
     nz=(nz+1)/2
     basic_cell= Atoms('C4', 
@@ -32,6 +32,8 @@ def build_sheet(nx, nz):
     atoms.pop(basic_cell.get_number_of_atoms()*nz-1)
     atoms.pop(0)
     return atoms
+
+
 
 def nitrogenate(sheet, position):
     symbols = atoms.get_chemical_symbols()
@@ -125,15 +127,22 @@ def find_edge_atoms(atoms):
     return edge_atoms
 
 
-def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
+def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
     if optimize_geometry == 0:
         geom_param = False
     elif optimize_geometry == 1:
         geom_param = True
     else:
         geom_param = False
+    # if make_symmetric == 0:
+    #     symmetric = False
+    # elif make_symmetric == 1:
+    #     symmetric_param = True
+    # else:
+    #     symmetric_param = False
 
     atoms = build_sheet(nx, nz)
+    make_symmetric(atoms, nx, nz)
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
@@ -244,36 +253,32 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0):
         plt.savefig(title_list[i]+".png")
         plt.clf()
 
-def rectangularize(atoms, nx, nz):
-    highest_pop_left = 2*nz-2
-    to_be_removed = []
+def make_symmetric(atoms, nx, nz):
+        print "Making graphene sheet symmetric"
+        highest_pop_left = 2*nz-2
+        to_be_removed = []
 
-    for i in xrange(2, nz, 2):
-        to_be_removed.append(2*i-2)
-        to_be_removed.append(2*i-1)
+        for i in xrange(2, nz, 2):
+            to_be_removed.append(2*i-2)
+            to_be_removed.append(2*i-1)
         
-    to_be_removed = to_be_removed[::-1]
+        to_be_removed = to_be_removed[::-1]
 
-    for entry in to_be_removed:
-        atoms.pop(entry)
-
-
+        for entry in to_be_removed:
+            atoms.pop(entry)
 
 
-# nz_list = [3, 5, 7, 9, 11, 13]
-# for item in nz_list:
-#     atoms = build_sheet(9, item)
-#     calc_edge_nitrogens(9, item)
 
-atoms = build_sheet(3, 3)
-rectangularize(atoms, 3, 3)
+
+atoms = build_sheet(3, 5)
+#make_symmetric(atoms, 3, 5)
 
 
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 3, optimize_geometry=1)
+calc_edge_nitrogens(3, 5, optimize_geometry=0)
 
 #print data.atomcharges
 
