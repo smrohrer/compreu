@@ -17,7 +17,7 @@ import matplotlib.cm as cm
 
 np.set_printoptions(precision=3,suppress=True)
 
-def build_sheet(nx, nz, symmetry="0"):
+def build_sheet(nx, nz, symmetry=0):
     nx=nx+1
     nz=(nz+1)/2
     basic_cell= Atoms('C4', 
@@ -31,8 +31,23 @@ def build_sheet(nx, nz, symmetry="0"):
     atoms=basic_cell.repeat((nx,1,nz))
     atoms.pop(basic_cell.get_number_of_atoms()*nz-1)
     atoms.pop(0)
-    return atoms
 
+
+    if symmetry == 1:
+        print "Making graphene sheet symmetric"
+        to_be_removed = []
+
+        for i in xrange(2, nz+2, 2):
+            to_be_removed.append(2*i-2)
+            to_be_removed.append(2*i-1)
+        
+        to_be_removed = to_be_removed[::-1]
+
+        for entry in to_be_removed:
+            atoms.pop(entry)
+    else:
+        print "Molecule was not made symmetric"
+    return atoms
 
 
 def nitrogenate(sheet, position):
@@ -126,6 +141,19 @@ def find_edge_atoms(atoms):
             edge_atoms.append(iatom)
     return edge_atoms
 
+# def make_symmetric(atoms, nx, nz):
+#         print "Making graphene sheet symmetric"
+#         highest_pop_left = 2*nz-2
+#         to_be_removed = []
+
+#         for i in xrange(2, nz, 2):
+#             to_be_removed.append(2*i-2)
+#             to_be_removed.append(2*i-1)
+        
+#         to_be_removed = to_be_removed[::-1]
+
+#         for entry in to_be_removed:
+#             atoms.pop(entry)
 
 def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
     if optimize_geometry == 0:
@@ -134,15 +162,14 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         geom_param = True
     else:
         geom_param = False
-    # if make_symmetric == 0:
-    #     symmetric = False
-    # elif make_symmetric == 1:
-    #     symmetric_param = True
-    # else:
-    #     symmetric_param = False
 
-    atoms = build_sheet(nx, nz)
-    make_symmetric(atoms, nx, nz)
+    if make_symmetric == 1:
+        print "atoms sheet at start of calc is symmetric"
+        atoms = build_sheet(nx, nz, symmetry=1)
+        ##set parameter for multiplicity of 2 here##########3
+    else:
+        atoms = build_sheet(nx, nz, symmetry=0)
+
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
@@ -191,7 +218,12 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
 ##Writes energy values associated with single nitrogen substitions into energy arrays
     nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
     for index_number in edge_carbon_index:
-        atoms = build_sheet(nx, nz)
+        if make_symmetric == 1:
+            print "nitrogenate make atoms sheet is symmetric"
+            atoms = build_sheet(nx, nz, symmetry=1)
+        else:
+            atoms = build_sheet(nx, nz, symmetry=0)
+        #atoms = build_sheet(nx, nz)
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
         #view(atoms, viewer="avogadro")
@@ -253,32 +285,18 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.savefig(title_list[i]+".png")
         plt.clf()
 
-def make_symmetric(atoms, nx, nz):
-        print "Making graphene sheet symmetric"
-        highest_pop_left = 2*nz-2
-        to_be_removed = []
-
-        for i in xrange(2, nz, 2):
-            to_be_removed.append(2*i-2)
-            to_be_removed.append(2*i-1)
-        
-        to_be_removed = to_be_removed[::-1]
-
-        for entry in to_be_removed:
-            atoms.pop(entry)
 
 
 
 
-atoms = build_sheet(3, 5)
-#make_symmetric(atoms, 3, 5)
 
+atoms = build_sheet(3, 5, symmetry=1)
 
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 5, optimize_geometry=0)
+calc_edge_nitrogens(3, 5, optimize_geometry=0, make_symmetric=1)
 
 #print data.atomcharges
 
