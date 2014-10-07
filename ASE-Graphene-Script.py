@@ -35,6 +35,7 @@ def build_sheet(nx, nz, symmetry=0):
 
     if symmetry == 1:
         print "Making graphene sheet symmetric"
+        global to_be_removed
         to_be_removed = []
 
         for i in xrange(2, nz+2, 2):
@@ -202,6 +203,11 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     for value in xrange(0, len(addition)):
         edge_carbon_index.append(nz*multiplication[value]+addition[value])
     edge_carbon_index.pop(1)
+
+    if make_symmetric == 1:
+        edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
+    else:
+        pass
 
 ##setup arrays for color map that will be utilized in draw_colormap function later    
     x_pos, y_pos, scf_energy, HOMO_energy, LUMO_energy = (np.array([]) for i in range(5))
