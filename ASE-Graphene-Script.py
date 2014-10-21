@@ -69,16 +69,30 @@ def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", meth
     #        spin= "! HF"
     # elif sum(atoms.get_atomic_numbers()) % 2 == 0:
     #        spin= "! UHF"
-    if geometry_opt == False:
+    if method == "am1" and geometry_opt == False:
         out=''
         parameters0= '{0}\t{1}\t{2}\n{3}'.format("%method", "method", method, "end")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
         out=out+parameters0+parameters1
         end_of_atom_coordinates="*"
 
-    elif geometry_opt == True:
+    elif method == "am1" and geometry_opt == True:
         out=''
         parameters0= '{0}\t{1}\t{2}\t{3}\t{4}\n{5}'.format("%method", "method", method, "method", "OPT", "end")
+        parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
+        out=out+parameters0+parameters1
+        end_of_atom_coordinates="*"
+
+    elif method == "DFT" and geometry_opt== False:
+        out=''
+        parameters0= '{0}\t{1}\n'.format("!", "DFT-Energy")
+        parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
+        out=out+parameters0+parameters1
+        end_of_atom_coordinates="*"
+
+    elif method == "DFT" and geometry_opt == True:
+        out=''
+        parameters0= '{0}\t{1}\n'.format("!", "Good-Opt")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
         out=out+parameters0+parameters1
         end_of_atom_coordinates="*"
@@ -296,13 +310,13 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
 
 
 
-atoms = build_sheet(3, 5, symmetry=1)
+atoms = build_sheet(3, 3, symmetry=1)
 
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-calc_edge_nitrogens(3, 5, optimize_geometry=0, make_symmetric=1)
+calc_edge_nitrogens(3, 3, method="DFT", optimize_geometry=True, make_symmetric=1)
 
 #print data.atomcharges
 
