@@ -1,8 +1,7 @@
-##150101
-#6:12pm - 7:07pm
-#7:33pm - 9:00pm
 from Tkinter import *
 
+
+#button for instant open molecule in avogadro, 'Go' button shoud be called Calculate
 root = Tk()
 root.title("Graphene Nitrogenator")
 Label(root, text="GUI for Nitrogenated Graphene Energy Calculations").pack()
@@ -27,10 +26,36 @@ class checkbox:
 		self.cbox_frame.pack()
 
 	def symtrc_cbox(self):
-		Checkbutton(self.cbox_frame, text="Make molecule symmetric").pack()
+		Checkbutton(self.cbox_frame, text="Make molecule symmetric").pack(anchor=W)
+
+	def unsaturate_cbox(self):
+		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated").pack(anchor=W)
+#can't seem to get checkboxes to align
 		
 
-sh_pm = sheet_param(root)
-symtrc_check = checkbox(root)
-symtrc_check.symtrc_cbox()
+def build_param_frame(master):
+	lbl_bld_frame = LabelFrame(master, text="Graphene Builder Parameters", padx=5, pady =5)
+	lbl_bld_frame.pack(expand="yes")
+	sheet_param(lbl_bld_frame)
+	checkbox(lbl_bld_frame).symtrc_cbox()
+	checkbox(lbl_bld_frame).unsaturate_cbox()
+
+def calc_param_frame(master):
+	lbl_calc_frame = LabelFrame(master, text="Calculation Parameters", padx=5, pady=5)
+	lbl_calc_frame.pack(expand="yes")
+	drop_list(lbl_calc_frame).calc_combobox()
+
+class drop_list:
+	def __init__(self, master):
+		self.drop_list_frame = Frame(master)
+		self.drop_list_frame.pack()
+
+	def calc_combobox(self):
+		calculator = StringVar()
+		calculator.set("ORCA")
+		OptionMenu(self.drop_list_frame, calculator, "ORCA", "NWChem", "Gaussian").pack()
+
+
+build_param_frame(root)
+calc_param_frame(root)
 root.mainloop()
