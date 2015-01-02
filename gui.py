@@ -79,7 +79,14 @@ def calc_param_frame(master):
 	checkbox(lbl_calc_frame).opt_geo_cbox()
 
 
+<<<<<<< HEAD
 build_param_frame(root)
 calc_param_frame(root)
 button(root).bottom_buttons()
 root.mainloop()
+=======
+sh_pm = sheet_param(root)
+symtrc_check = checkbox(root)
+symtrc_check.symtrc_cbox()
+root.mainloop()
+>>>>>>> da48a0e0c761313a778069496e76d8e4e37421e9
