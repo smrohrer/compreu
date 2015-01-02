@@ -30,8 +30,39 @@ class checkbox:
 
 	def unsaturate_cbox(self):
 		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated").pack(anchor=W)
+
+	def opt_geo_cbox(self):
+		Checkbutton(self.cbox_frame, text="Optimize Geometry").pack(anchor=W)
 #can't seem to get checkboxes to align
-		
+
+
+class drop_list:
+	def __init__(self, master):
+		self.drop_list_frame = Frame(master)
+		self.drop_list_frame.pack()
+
+	def calc_combobox(self):
+		calculator_var = StringVar()
+		calculator_var.set("ORCA")
+		OptionMenu(self.drop_list_frame, calculator_var, "ORCA", "NWChem", "Gaussian").grid(row=0, column=1)
+		Label(self.drop_list_frame, text="Calculator").grid(row=0, sticky=E)
+
+	def calc_method(self):
+		method_var = StringVar()
+		method_var.set("am1")
+		OptionMenu(self.drop_list_frame, method_var, "am1", "DFT").grid(row=1, column=1)
+		Label(self.drop_list_frame, text="method").grid(row=1, sticky=E)
+
+
+class button:
+	def __init__(self, master):
+		self.button_frame = Frame(master)
+		self.button_frame.pack(expand="yes")
+
+	def bottom_buttons(self):
+		Button(self.button_frame, text="Calculate").grid(row=0, column=3)
+		Button(self.button_frame, text="View in Avogadro").grid(row=0, column=0, padx="50")
+
 
 def build_param_frame(master):
 	lbl_bld_frame = LabelFrame(master, text="Graphene Builder Parameters", padx=5, pady =5)
@@ -44,18 +75,11 @@ def calc_param_frame(master):
 	lbl_calc_frame = LabelFrame(master, text="Calculation Parameters", padx=5, pady=5)
 	lbl_calc_frame.pack(expand="yes")
 	drop_list(lbl_calc_frame).calc_combobox()
-
-class drop_list:
-	def __init__(self, master):
-		self.drop_list_frame = Frame(master)
-		self.drop_list_frame.pack()
-
-	def calc_combobox(self):
-		calculator = StringVar()
-		calculator.set("ORCA")
-		OptionMenu(self.drop_list_frame, calculator, "ORCA", "NWChem", "Gaussian").pack()
+	drop_list(lbl_calc_frame).calc_method()
+	checkbox(lbl_calc_frame).opt_geo_cbox()
 
 
 build_param_frame(root)
 calc_param_frame(root)
+button(root).bottom_buttons()
 root.mainloop()
