@@ -1,6 +1,3 @@
-##150101
-#6:12pm - 7:07pm
-#7:33pm - 9:00pm
 from Tkinter import *
 
 root = Tk()
