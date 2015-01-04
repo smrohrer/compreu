@@ -1,7 +1,7 @@
 from Tkinter import *
 
+#Requires 'hovering cursor' tooltip for all major components
 
-#button for instant open molecule in avogadro, 'Go' button shoud be called Calculate
 root = Tk()
 root.title("Graphene Nitrogenator")
 Label(root, text="GUI for Nitrogenated Graphene Energy Calculations").pack()
@@ -9,14 +9,16 @@ Label(root, text="GUI for Nitrogenated Graphene Energy Calculations").pack()
 
 class sheet_param:
 	def __init__(self, master):
+		horizon_sheet_variable = StringVar()
+		vertical_sheet_variable = StringVar()
 	
 		param_frame = Frame(master)
 		Label(param_frame, text="horizontal").grid(row=1, column=1)
 		Label(param_frame, text="vertical").grid(row=1, column=3)
 		Label(param_frame, text="Sheet Dimensions").grid(row=2, sticky=E)
 		Label(param_frame, text="x").grid(row=2, column=2)
-		Entry(param_frame, width=2).grid(row=2, column=1)
-		Entry(param_frame, width=2).grid(row=2, column=3)
+		Entry(param_frame, width=2, textvariable=horizon_sheet_variable).grid(row=2, column=1)
+		Entry(param_frame, width=2, textvariable=vertical_sheet_variable).grid(row=2, column=3)
 		param_frame.pack()
 		
 
@@ -26,10 +28,12 @@ class checkbox:
 		self.cbox_frame.pack()
 
 	def symtrc_cbox(self):
-		Checkbutton(self.cbox_frame, text="Make molecule symmetric").pack(anchor=W)
+		self.symmetry__var = IntVar()
+		Checkbutton(self.cbox_frame, text="Make molecule symmetric", variable=self.symmetry__var).pack(anchor=W)
 
 	def unsaturate_cbox(self):
-		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated").pack(anchor=W)
+		self.unsat_var = IntVar()
+		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated", variable=self.unsat_var, onvalue=1, offvalue=0).pack(anchor=W)
 
 	def opt_geo_cbox(self):
 		Checkbutton(self.cbox_frame, text="Optimize Geometry").pack(anchor=W)
@@ -42,9 +46,9 @@ class drop_list:
 		self.drop_list_frame.pack()
 
 	def calc_combobox(self):
-		calculator_var = StringVar()
-		calculator_var.set("ORCA")
-		OptionMenu(self.drop_list_frame, calculator_var, "ORCA", "NWChem", "Gaussian").grid(row=0, column=1)
+		self.calculator_var = StringVar()
+		self.calculator_var.set("ORCA")
+		OptionMenu(self.drop_list_frame, self.calculator_var, "ORCA", "NWChem", "Gaussian").grid(row=0, column=1)
 		Label(self.drop_list_frame, text="Calculator").grid(row=0, sticky=E)
 
 	def calc_method(self):
@@ -61,7 +65,7 @@ class button:
 
 	def bottom_buttons(self):
 		Button(self.button_frame, text="Calculate").grid(row=0, column=3)
-		Button(self.button_frame, text="View in Avogadro").grid(row=0, column=0, padx="50")
+		Button(self.button_frame, text="View in Avogadro").grid(row=0, column=0)
 
 
 def build_param_frame(master):
@@ -79,14 +83,7 @@ def calc_param_frame(master):
 	checkbox(lbl_calc_frame).opt_geo_cbox()
 
 
-<<<<<<< HEAD
 build_param_frame(root)
 calc_param_frame(root)
 button(root).bottom_buttons()
 root.mainloop()
-=======
-sh_pm = sheet_param(root)
-symtrc_check = checkbox(root)
-symtrc_check.symtrc_cbox()
-root.mainloop()
->>>>>>> da48a0e0c761313a778069496e76d8e4e37421e9
