@@ -1,5 +1,5 @@
 from Tkinter import *
-import ASE-Graphene-Script
+import ASE_Graphene
 
 #Requires 'hovering cursor' tooltip for all major components
 
@@ -10,9 +10,10 @@ Label(root, text="GUI for Nitrogenated Graphene Energy Calculations").pack()
 
 class sheet_param:
 	def __init__(self, master):
+		global horizon_sheet_variable
 		horizon_sheet_variable = StringVar()
+		global vertical_sheet_variable
 		vertical_sheet_variable = StringVar()
-	
 		param_frame = Frame(master)
 		Label(param_frame, text="horizontal").grid(row=1, column=1)
 		Label(param_frame, text="vertical").grid(row=1, column=3)
@@ -21,23 +22,31 @@ class sheet_param:
 		Entry(param_frame, width=2, textvariable=horizon_sheet_variable).grid(row=2, column=1)
 		Entry(param_frame, width=2, textvariable=vertical_sheet_variable).grid(row=2, column=3)
 		param_frame.pack()
-		
+
 
 class checkbox:
 	def __init__(self,master):
 		self.cbox_frame = Frame(master)
 		self.cbox_frame.pack()
+		
+		
+		
 
 	def symtrc_cbox(self):
-		self.symmetry__var = IntVar()
-		Checkbutton(self.cbox_frame, text="Make molecule symmetric", variable=self.symmetry__var).pack(anchor=W)
+		global symmetry_var
+		symmetry_var = IntVar()
+		Checkbutton(self.cbox_frame, text="Make molecule symmetric", variable=symmetry_var).pack(anchor=W)
 
 	def unsaturate_cbox(self):
-		self.unsat_var = IntVar()
-		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated", variable=self.unsat_var, onvalue=1, offvalue=0).pack(anchor=W)
+		global unsat_var
+		unsat_var = IntVar()
+		Checkbutton(self.cbox_frame, text="Leave molecule unsaturated", variable=unsat_var, onvalue=1, offvalue=0).pack(anchor=W)
+		#unsat_var_string = str(unsat_var.get())
 
 	def opt_geo_cbox(self):
-		Checkbutton(self.cbox_frame, text="Optimize Geometry").pack(anchor=W)
+		global opt_geo_var
+		self.opt_geo_var = IntVar()
+		Checkbutton(self.cbox_frame, text="Optimize Geometry", variable=self.opt_geo_var).pack(anchor=W)
 #can't seem to get checkboxes to align
 
 
@@ -59,6 +68,8 @@ class drop_list:
 		self.method_var.set("am1")
 		OptionMenu(self.drop_list_frame, self.method_var, "am1", "DFT").grid(row=1, column=1)
 		Label(self.drop_list_frame, text="method").grid(row=1, sticky=E)
+		global selected_calc_method
+		selected_calc_method = self.method_var.get()
 
 
 
@@ -69,7 +80,14 @@ class button:
 
 	def bottom_buttons(self):
 		Button(self.button_frame, text="Calculate").grid(row=0, column=3)
-		Button(self.button_frame, text="View in Avogadro").grid(row=0, column=0)
+		Button(self.button_frame, text="View in Avogadro", command=gui_view).grid(row=0, column=0)
+
+	def test_button(self):
+		Button(self.button_frame, text="Print Variable", command=self.print_var).grid(row=1)
+
+	def print_var(self):
+		string = str(horizon_sheet_variable.get())
+		print string
 
 
 def build_param_frame(master):
@@ -85,10 +103,20 @@ def calc_param_frame(master):
 	drop_list(lbl_calc_frame).calc_combobox()
 	drop_list(lbl_calc_frame).calc_method()
 	checkbox(lbl_calc_frame).opt_geo_cbox()
-	
+
+def gui_view():
+        ##setting sheet dimension parameter variables from ASE_Graphene.py to local variables
+        horizontal_dimension = int(horizon_sheet_variable.get())
+        vertical_dimension = int(vertical_sheet_variable.get())
+        symmetry_int = int(symmetry_var.get())
+        atoms = ASE_Graphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+        ASE_Graphene.view(atoms, viewer="avogadro")
+
 
 
 build_param_frame(root)
 calc_param_frame(root)
 button(root).bottom_buttons()
+
+button(root).test_button()
 root.mainloop()
