@@ -29,9 +29,6 @@ class checkbox:
 		self.cbox_frame = Frame(master)
 		self.cbox_frame.pack()
 		
-		
-		
-
 	def symtrc_cbox(self):
 		global symmetry_var
 		symmetry_var = IntVar()
@@ -44,9 +41,10 @@ class checkbox:
 		#unsat_var_string = str(unsat_var.get())
 
 	def opt_geo_cbox(self):
-		global opt_geo_var
-		self.opt_geo_var = IntVar()
-		Checkbutton(self.cbox_frame, text="Optimize Geometry", variable=self.opt_geo_var).pack(anchor=W)
+		opt_geo_var = IntVar()
+		Checkbutton(self.cbox_frame, text="Optimize Geometry", variable=opt_geo_var).pack(anchor=W)
+		global selected_geometry_opt
+		selected_geometry_opt = int(opt_geo_var.get())
 #can't seem to get checkboxes to align
 
 
@@ -62,14 +60,14 @@ class drop_list:
 		OptionMenu(self.drop_list_frame, self.calculator_var, "ORCA", "NWChem", "Gaussian").grid(row=0, column=1)
 		Label(self.drop_list_frame, text="Calculator").grid(row=0, sticky=E)
 		global selected_calculator
-		selected_calculator = self.calculator_var.get()
+		selected_calculator = str(self.calculator_var.get())
 
 	def calc_method(self):
 		self.method_var.set("am1")
 		OptionMenu(self.drop_list_frame, self.method_var, "am1", "DFT").grid(row=1, column=1)
 		Label(self.drop_list_frame, text="method").grid(row=1, sticky=E)
 		global selected_calc_method
-		selected_calc_method = self.method_var.get()
+		selected_calc_method = str(self.method_var.get())
 
 
 
@@ -79,7 +77,7 @@ class button:
 		self.button_frame.pack(expand="yes")
 
 	def bottom_buttons(self):
-		Button(self.button_frame, text="Calculate").grid(row=0, column=3)
+		Button(self.button_frame, text="Calculate", command=gui_calculate).grid(row=0, column=3)
 		Button(self.button_frame, text="View in Avogadro", command=gui_view).grid(row=0, column=0)
 
 	def test_button(self):
@@ -116,6 +114,31 @@ def gui_view():
         elif unsat_int==1:
         	pass
         ASE_Graphene.view(atoms, viewer="avogadro")
+
+def gui_calculate():
+	if selected_calculator=="ORCA":
+
+		horizontal_dimension = int(horizon_sheet_variable.get())
+		vertical_dimension = int(vertical_sheet_variable.get())
+		symmetry_int = int(symmetry_var.get())
+		atoms = ASE_Graphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+		unsat_int = int(unsat_var.get())
+
+		if unsat_int==0:
+			ASE_Graphene.daves_super_saturate(atoms)
+		elif unsat_int==1:
+			pass
+
+		if selected_geometry_opt==1:
+			opt_geom_truefalse = True
+		elif selected_geometry_opt==0:
+			opt_geom_truefalse = False
+
+		ASE_Graphene.calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=opt_geom_truefalse, make_symmetric=selected_geometry_opt)
+	else:
+		pass
+
+	
 
 
 

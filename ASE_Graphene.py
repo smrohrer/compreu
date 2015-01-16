@@ -102,7 +102,7 @@ def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", meth
         f.write(out)
         f.write(print_atoms(atoms))
         f.write(end_of_atom_coordinates)
-    subprocess.call("/home/matthew/orca/orca "+ filename + " > " + output, shell=True)
+    subprocess.call(ORCA_filepath + "/orca/orca "+ filename + " > " + output, shell=True)
     return parse(output)
 
 def parse(filename):
@@ -189,9 +189,11 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
-    os.popen("mkdir /home/matthew/compreu/%dx%dsheet" % (nx, nz))
-    os.chdir("/home/matthew/compreu/%dx%dsheet" % (nx, nz))
-    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
+    global ORCA_filepath
+    ORCA_filepath = os.getcwd()
+    os.popen("mkdir " + ORCA_filepath + "/%dx%dsheet" % (nx, nz))
+    os.chdir(ORCA_filepath + "/%dx%dsheet" % (nx, nz))
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output= ORCA_filepath + "/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
     moenergies_array = data.moenergies[0]
 
 ##Writes carbon only sheet energy values
@@ -248,7 +250,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
         #view(atoms, viewer="avogadro")
-        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=geom_param, output="/home/matthew/compreu/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
+        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=geom_param, output=ORCA_filepath + "/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
 
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
         
@@ -305,18 +307,6 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.colorbar(p)
         plt.savefig(title_list[i]+".png")
         plt.clf()
-
-# def gui_view():
-#         ##setting sheet dimension parameter variables from gui.py to local variables
-#         horizon_sheet_variable = gui.horizon_sheet_variable
-#         horizontal_dimension_string = int(horizon_sheet_variable.get())
-#         vertical_sheet_variable = gui.vertical_sheet_variable
-#         vertical_dimension_string = int(vertical_sheet_variable.get())
-#         symmetry_var = gui.symmetry__var
-#         symmetry_var_string = int(symmetry_var.get())
-#         atoms = build_sheet(horizontal_dimension_string, vertical_dimension_string, symmetry=symmetry_var_string)
-#         view(atoms, viewer="avogadro")
-#         #print horizontal_dimension_string
 
 
 
