@@ -110,6 +110,11 @@ def gui_view():
         vertical_dimension = int(vertical_sheet_variable.get())
         symmetry_int = int(symmetry_var.get())
         atoms = ASE_Graphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+        unsat_int = int(unsat_var.get())
+        if unsat_int==0:
+        	ASE_Graphene.daves_super_saturate(atoms)
+        elif unsat_int==1:
+        	pass
         ASE_Graphene.view(atoms, viewer="avogadro")
 
 
