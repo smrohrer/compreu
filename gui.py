@@ -1,4 +1,5 @@
 from Tkinter import *
+import ASE-Graphene-Script
 
 #Requires 'hovering cursor' tooltip for all major components
 
@@ -44,18 +45,21 @@ class drop_list:
 	def __init__(self, master):
 		self.drop_list_frame = Frame(master)
 		self.drop_list_frame.pack()
+		self.method_var = StringVar()
+		self.calculator_var = StringVar()
 
 	def calc_combobox(self):
-		self.calculator_var = StringVar()
 		self.calculator_var.set("ORCA")
 		OptionMenu(self.drop_list_frame, self.calculator_var, "ORCA", "NWChem", "Gaussian").grid(row=0, column=1)
 		Label(self.drop_list_frame, text="Calculator").grid(row=0, sticky=E)
+		global selected_calculator
+		selected_calculator = self.calculator_var.get()
 
 	def calc_method(self):
-		method_var = StringVar()
-		method_var.set("am1")
-		OptionMenu(self.drop_list_frame, method_var, "am1", "DFT").grid(row=1, column=1)
+		self.method_var.set("am1")
+		OptionMenu(self.drop_list_frame, self.method_var, "am1", "DFT").grid(row=1, column=1)
 		Label(self.drop_list_frame, text="method").grid(row=1, sticky=E)
+
 
 
 class button:
@@ -81,6 +85,7 @@ def calc_param_frame(master):
 	drop_list(lbl_calc_frame).calc_combobox()
 	drop_list(lbl_calc_frame).calc_method()
 	checkbox(lbl_calc_frame).opt_geo_cbox()
+	
 
 
 build_param_frame(root)
