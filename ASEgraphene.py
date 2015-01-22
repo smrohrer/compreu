@@ -173,18 +173,11 @@ def find_edge_atoms(atoms):
 #             atoms.pop(entry)
 
 def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
-    # if optimize_geometry == 0:
-    #     geom_param = False
-    # elif optimize_geometry == 1:
-    #     geom_param = True
-    # else:
-    #     geom_param = False
-
     if make_symmetric == 1:
         print "atoms sheet at start of calc is symmetric"
         atoms = build_sheet(nx, nz, symmetry=1)
         symmetry_folder_string = "_symmetric"
-        ##set parameter for multiplicity of 2 here##########3
+        ##set parameter for multiplicity of 2 here##########
     else:
         atoms = build_sheet(nx, nz, symmetry=0)
         symmetry_folder_string = "_asymmetric"
@@ -232,12 +225,6 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     x_pos = np.append(x_pos, no_hydrogen[:,0])
     y_pos = np.append(y_pos, no_hydrogen[:,2])
     all_carbon_scf = data.scfenergies
-    scf_energy = np.append(scf_energy, data.scfenergies)
-    scf_energy = np.repeat(scf_energy, no_hydrogen_count)
-    HOMO_energy = np.append(HOMO_energy, moenergies_array[data.homos])
-    HOMO_energy = np.repeat(HOMO_energy, no_hydrogen_count)
-    LUMO_energy = np.append(LUMO_energy, moenergies_array[data.homos+1])
-    LUMO_energy = np.repeat(LUMO_energy, no_hydrogen_count)
 
 ##Writes energy values associated with single nitrogen substitions into energy arrays
     nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
@@ -247,33 +234,22 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
             atoms = build_sheet(nx, nz, symmetry=1)
         else:
             atoms = build_sheet(nx, nz, symmetry=0)
-        #atoms = build_sheet(nx, nz)
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
-        #view(atoms, viewer="avogadro")
         data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=optimize_geometry, output=ORCA_filepath + "/%dx%dsheet%s/orca_%dx%dsheet.out" % (nx, nz, symmetry_folder_string, nx, nz))
-
+        moenergies_array = data.moenergies[0]
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
         
         ##X & Y position array segregation
         nitrogenated_x_pos = np.append(nitrogenated_x_pos, x_pos[index_number])
-    
-        #x_pos = np.delete(x_pos, index_number)
         nitrogenated_y_pos = np.append(nitrogenated_y_pos, y_pos[index_number])
-        #y_pos = np.delete(y_pos, index_number)
 
         ##Energies arrays segregation
         nitrogenated_scf = np.append(nitrogenated_scf, (data.scfenergies-all_carbon_scf))
-       # scf_energy = np.delete(scf_energy, index_number)
-
         nitrogenated_HOMO = np.append(nitrogenated_HOMO, moenergies_array[data.homos])
-       # HOMO_energy = np.delete(HOMO_energy, index_number)
-
         nitrogenated_LUMO = np.append(nitrogenated_LUMO, moenergies_array[data.homos+1])
-        #LUMO_energy = np.delete(LUMO_energy, index_number)
 
-
-##Writes results text file
+##Writes nitrogen substition energies into results text file
         with open("%dx%d_edge_results.txt" % (nx, nz), 'a+') as e:
             moenergies_array = data.moenergies[0]
             e.write("\n\n%dx%dsheetN%d\n" % (nx, nz, index_number))
@@ -288,12 +264,10 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     cm = plt.get_cmap("hot")
     title_list =["SCF_Energy_Map", "HOMO_Energy_Map", "LUMO_Energy_Map"]
     energy_list = [nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO]
-    #plt.xlabel("Atom X Position on Sheet")
-    #plt.ylabel("Atom Z Position on Sheet")
+    plt.xlabel("Atom X Position on Sheet")
+    plt.ylabel("Atom Z Position on Sheet")
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    
- 
     for i in xrange(3):
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -436,20 +410,6 @@ def gui_calculate():
         atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
         global unsat_int
         unsat_int = int(unsat_var.get())
-
-        # if unsat_int==0 and selected_geometry_opt==0:
-        #     daves_super_saturate(atoms)
-        #     opt_geom_truefalse = False
-
-        # elif unsat_int==0 and selected_geometry_opt==1:
-        #     daves_super_saturate(atoms)
-        #     opt_geom_truefalse = True
-
-        # elif unsat_int==1 and selected_geometry_opt==0:
-        #     opt_geom_truefalse = False
-
-        # elif unsat_int==1 and selected_geometry_opt==1:
-        #     opt_geom_truefalse = True
         calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
     else:
         pass
