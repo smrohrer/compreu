@@ -66,29 +66,29 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1", geometry_opt=False, output="temp.out"):
-    if method == "am1" and geometry_opt == False:
+def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1", geometry_opt=0, output="temp.out"):
+    if method == "am1" and geometry_opt == 0:
         out=''
         parameters0= '{0}\t{1}\t{2}\n{3}'.format("%method", "method", method, "end")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
         out=out+parameters0+parameters1
         end_of_atom_coordinates="*"
 
-    elif method == "am1" and geometry_opt == True:
+    elif method == "am1" and geometry_opt == 1:
         out=''
         parameters0= '{0}\t{1}\t{2}\t{3}\t{4}\n{5}'.format("%method", "method", method, "method", "OPT", "end")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
         out=out+parameters0+parameters1
         end_of_atom_coordinates="*"
 
-    elif method == "DFT" and geometry_opt== False:
+    elif method == "DFT" and geometry_opt== 0:
         out=''
         parameters0= '{0}\t{1}\n'.format("!", "DFT-Energy")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
         out=out+parameters0+parameters1
         end_of_atom_coordinates="*"
 
-    elif method == "DFT" and geometry_opt == True:
+    elif method == "DFT" and geometry_opt == 1:
         out=''
         parameters0= '{0}\t{1}\n'.format("!", "Good-Opt")
         parameters1='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
@@ -103,10 +103,14 @@ def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", meth
     return parse(output)
 
 def parse(filename):
-    myfile= ccopen(filename)
+    myfile = ccopen(filename)
     data = myfile.parse()
     return data
-    
+
+def make_gaussian(atoms, method="am1", geometry_opt=False, output="temp.chk"):
+    if method == "am1" and geometry_opt == False:
+        out = ''
+        parameters0 = '{0}\n{1}\n{2}'.format("%mem=48MB", "%chk=/scratch/", output)
 
 def daves_super_saturate(atoms):
     pos = atoms.get_positions()
@@ -169,26 +173,28 @@ def find_edge_atoms(atoms):
 #             atoms.pop(entry)
 
 def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
-    if optimize_geometry == 0:
-        geom_param = False
-    elif optimize_geometry == 1:
-        geom_param = True
-    else:
-        geom_param = False
+    # if optimize_geometry == 0:
+    #     geom_param = False
+    # elif optimize_geometry == 1:
+    #     geom_param = True
+    # else:
+    #     geom_param = False
 
     if make_symmetric == 1:
         print "atoms sheet at start of calc is symmetric"
         atoms = build_sheet(nx, nz, symmetry=1)
+        symmetry_folder_string = "_symmetric"
         ##set parameter for multiplicity of 2 here##########3
     else:
         atoms = build_sheet(nx, nz, symmetry=0)
+        symmetry_folder_string = "_asymmetric"
 
     no_hydrogen = atoms.get_positions()
     no_hydrogen_count = atoms.get_number_of_atoms()
     daves_super_saturate(atoms)
-    os.popen("mkdir " + ORCA_filepath + "/%dx%dsheet" % (nx, nz))
-    os.chdir(ORCA_filepath + "/%dx%dsheet" % (nx, nz))
-    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=geom_param, output= ORCA_filepath + "/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
+    os.popen("mkdir " + ORCA_filepath + "/%dx%dsheet%s" % (nx, nz, symmetry_folder_string))
+    os.chdir(ORCA_filepath + "/%dx%dsheet%s" % (nx, nz, symmetry_folder_string))
+    data = make_orca(atoms, filename="%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/%dx%dsheet%s/orca_%dx%dsheet.out" % (nx, nz, symmetry_folder_string, nx, nz))
     moenergies_array = data.moenergies[0]
 
 ##Writes carbon only sheet energy values
@@ -245,7 +251,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         nitrogenate(atoms, index_number)
         daves_super_saturate(atoms)
         #view(atoms, viewer="avogadro")
-        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=geom_param, output=ORCA_filepath + "/%dx%dsheet/orca_%dx%dsheet.out" % (nx, nz, nx, nz))
+        data = make_orca(atoms, filename = "%dx%dsheetN%d" % (nx, nz, index_number), multiplicity="1", method=method, geometry_opt=optimize_geometry, output=ORCA_filepath + "/%dx%dsheet%s/orca_%dx%dsheet.out" % (nx, nz, symmetry_folder_string, nx, nz))
 
     ##Segregate all carbon energies from substituted nitrogen energies within all pertaining arrays
         
@@ -371,7 +377,7 @@ class drop_list:
     def calc_method(self):
         self.method_var.set("am1")
         OptionMenu(self.drop_list_frame, self.method_var, "am1", "DFT").grid(row=1, column=1)
-        Label(self.drop_list_frame, text="method").grid(row=1, sticky=E)
+        Label(self.drop_list_frame, text="Method").grid(row=1, sticky=E)
         global selected_calc_method
         selected_calc_method = str(self.method_var.get())
 
@@ -428,20 +434,23 @@ def gui_calculate():
         symmetry_int = int(symmetry_var.get())
         global atoms
         atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+        global unsat_int
         unsat_int = int(unsat_var.get())
 
-        if unsat_int==0:
-            daves_super_saturate(atoms)
-        elif unsat_int==1:
-            pass
+        # if unsat_int==0 and selected_geometry_opt==0:
+        #     daves_super_saturate(atoms)
+        #     opt_geom_truefalse = False
 
-        if selected_geometry_opt==1:
-            opt_geom_truefalse = True
+        # elif unsat_int==0 and selected_geometry_opt==1:
+        #     daves_super_saturate(atoms)
+        #     opt_geom_truefalse = True
 
-        elif selected_geometry_opt==0:
-            opt_geom_truefalse = False
+        # elif unsat_int==1 and selected_geometry_opt==0:
+        #     opt_geom_truefalse = False
 
-        calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=opt_geom_truefalse, make_symmetric=selected_geometry_opt)
+        # elif unsat_int==1 and selected_geometry_opt==1:
+        #     opt_geom_truefalse = True
+        calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
     else:
         pass
 
@@ -453,19 +462,23 @@ build_param_frame(root)
 calc_param_frame(root)
 button(root).bottom_buttons()
 
-#button(root).test_button()
+# #button(root).test_button()
 root.mainloop()
 
 
 
-#atoms = build_sheet(3, 5, symmetry=1)
+#atoms = build_sheet(3, 3, symmetry=1)
 
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
 
 #view(atoms, viewer="avogadro")
-#calc_edge_nitrogens(3, 3, method="DFT", optimize_geometry=True, make_symmetric=1)
+#calc_edge_nitrogens(3, 3, method="am1", optimize_geometry=False, make_symmetric=1)
 
 #print data.atomcharges
 
-##Check carbon displays on armchair side of energy Graph === plt.axis('equal') is cutting off leftmost 2 carbons on armchair edge
+
+
+#############################################Concurrent Bug List##########################################################
+#symmetric molecules are viewed as symmetric in .png energy map files for 3x3 sheet
+#symmetry function does not continue past 5 verical graphene units
