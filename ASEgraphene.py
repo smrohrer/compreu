@@ -440,5 +440,5 @@ root.mainloop()
 
 
 #############################################Concurrent Bug List##########################################################
-#symmetric molecules are viewed as symmetric in .png energy map files for 3x3 sheet
+#asymmetric molecules are viewed as symmetric in .png energy map files for 3x3 sheet
 #symmetry function does not continue past 5 verical graphene units
