@@ -34,13 +34,12 @@ def build_sheet(nx, nz, symmetry=0):
     atoms.pop(basic_cell.get_number_of_atoms()*nz-1)
     atoms.pop(0)
 
-
     if symmetry == 1:
         print "Making graphene sheet symmetric"
         global to_be_removed
         to_be_removed = []
-
-        for i in xrange(2, nz+2, 2):
+        sym_fix_int = nz-1
+        for i in xrange(2, nz+sym_fix_int, 2):
             to_be_removed.append(2*i-2)
             to_be_removed.append(2*i-1)
         
@@ -158,19 +157,6 @@ def find_edge_atoms(atoms):
             edge_atoms.append(iatom)
     return edge_atoms
 
-# def make_symmetric(atoms, nx, nz):
-#         print "Making graphene sheet symmetric"
-#         highest_pop_left = 2*nz-2
-#         to_be_removed = []
-
-#         for i in xrange(2, nz, 2):
-#             to_be_removed.append(2*i-2)
-#             to_be_removed.append(2*i-1)
-        
-#         to_be_removed = to_be_removed[::-1]
-
-#         for entry in to_be_removed:
-#             atoms.pop(entry)
 
 def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
     if make_symmetric == 1:
@@ -279,13 +265,33 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         COLOR = energy_list[i]
         ax.scatter(x_pos, y_pos, c="0.5", s=100, marker='o', edgecolors='none')
         p = ax.scatter(nitrogenated_x_pos, nitrogenated_y_pos, c=COLOR, s=100, marker='o', edgecolors='none', label="something")
-        plt.colorbar(p)
+        cbar = plt.colorbar(p)
+        cbar.set_label("Energy in eV")
         plt.savefig(title_list[i]+".png")
         plt.clf()
 
+def nitrogenate_zig_zag(atoms, nx, nz):
+    addition = [0]
+    multiplication = []
+    edge_carbon_index =[]
+
+    for number in xrange(0, 2*nx):
+        addition.append(number)
+    for number in xrange(2, 2*(nx+2), 2):
+        multiplication.append(number)
+        multiplication.append(number)
+    for value in xrange(0, len(addition)):
+        edge_carbon_index.append(nz*multiplication[value]+addition[value])
+    edge_carbon_index.pop(1)
+
+    if make_symmetric == 1:
+        edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
+    else:
+        pass
 
 
 ###Tkinter Section Below
+################################################################################################################
 ################################################################################################################
 #Requires 'hovering cursor' tooltip for all major components
 
