@@ -158,7 +158,7 @@ def find_edge_atoms(atoms):
     return edge_atoms
 
 
-def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0):
+def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0, sub_all_zigzag=0):
     if make_symmetric == 1:
         print "atoms sheet at start of calc is symmetric"
         atoms = build_sheet(nx, nz, symmetry=1)
@@ -270,7 +270,14 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.savefig(title_list[i]+".png")
         plt.clf()
 
-def nitrogenate_zig_zag(atoms, nx, nz):
+def nitrogenate_all_zig_zag(nx, nz, method="am1", optimize_geometry=0, make_symmetric=0):
+    if make_symmetric == 1:
+        atoms = build_sheet(nx, nz, symmetry=1)
+        symmetry_folder_string = "_symmetric"
+    else:
+        atoms = build_sheet(nx, nz, symmetry=0)
+        symmetry_folder_string = "_asymmetric"
+
     addition = [0]
     multiplication = []
     edge_carbon_index =[]
@@ -288,6 +295,14 @@ def nitrogenate_zig_zag(atoms, nx, nz):
         edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
     else:
         pass
+    for edge_carbon in edge_carbon_index:
+        #nitrogenate(atoms, edge_carbon)
+        symbols = atoms.get_chemical_symbols()
+        symbols[edge_carbon] = 'N'
+        atoms.set_chemical_symbols(symbols)
+    view(atoms, viewer="avogadro")
+
+
 
 
 ###Tkinter Section Below
@@ -373,7 +388,7 @@ class button:
         Button(self.button_frame, text="View in Avogadro", command=gui_view).grid(row=0, column=0)
 
     def test_button(self):
-        Button(self.button_frame, text="Print Variable", command=self.print_var).grid(row=1)
+        Button(self.button_frame, text="Nitrogenate All", command=gui_nitrogenate_all).grid(row=1)
 
     def print_var(self):
         string = str(horizon_sheet_variable.get())
@@ -419,7 +434,15 @@ def gui_calculate():
         calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
     else:
         pass
-
+def gui_nitrogenate_all():
+    horizontal_dimension = int(horizon_sheet_variable.get())
+    vertical_dimension = int(vertical_sheet_variable.get())
+    symmetry_int = int(symmetry_var.get())
+    global atoms
+    atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+    global unsat_int
+    unsat_int = int(unsat_var.get())
+    nitrogenate_all_zig_zag(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
     
 
 
@@ -428,7 +451,7 @@ build_param_frame(root)
 calc_param_frame(root)
 button(root).bottom_buttons()
 
-# #button(root).test_button()
+button(root).test_button()
 root.mainloop()
 
 
@@ -447,4 +470,4 @@ root.mainloop()
 
 #############################################Concurrent Bug List##########################################################
 #asymmetric molecules are viewed as symmetric in .png energy map files for 3x3 sheet
-#symmetry function does not continue past 5 verical graphene units
+#calc_edge_nitrogens make checkbox parameter for 'nitrogenate all zig-zag edge carbons'
