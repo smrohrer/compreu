@@ -352,6 +352,11 @@ class checkbox:
         Checkbutton(self.cbox_frame, text="Optimize Geometry", variable=opt_geo_var).pack(anchor=W)
         global selected_geometry_opt
         selected_geometry_opt = int(opt_geo_var.get())
+
+    def nitrogenate_all_cbox(self):
+        global N_all_cbox_var
+        N_all_cbox_var = IntVar()
+        Checkbutton(self.cbox_frame, text="Nitrogenate all zig-zag positions", variable=N_all_cbox_var, onvalue=1, offvalue=0).pack(anchor=W)
 #can't seem to get checkboxes to align
 
 
@@ -401,11 +406,12 @@ def build_param_frame(master):
     sheet_param(lbl_bld_frame)
     checkbox(lbl_bld_frame).symtrc_cbox()
     checkbox(lbl_bld_frame).unsaturate_cbox()
+    checkbox(lbl_bld_frame).nitrogenate_all_cbox()
 
 def calc_param_frame(master):
     lbl_calc_frame = LabelFrame(master, text="Calculation Parameters", padx=5, pady=5)
     lbl_calc_frame.pack(expand="yes")
-    drop_list(lbl_calc_frame).calc_combobox()
+    #drop_list(lbl_calc_frame).calc_combobox()
     drop_list(lbl_calc_frame).calc_method()
     checkbox(lbl_calc_frame).opt_geo_cbox()
 
@@ -422,18 +428,19 @@ def gui_view():
         view(atoms, viewer="avogadro")
 
 def gui_calculate():
-    if selected_calculator=="ORCA":
+    horizontal_dimension = int(horizon_sheet_variable.get())
+    vertical_dimension = int(vertical_sheet_variable.get())
+    symmetry_int = int(symmetry_var.get())
+    global atoms
+    atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+    global unsat_int
+    unsat_int = int(unsat_var.get())
 
-        horizontal_dimension = int(horizon_sheet_variable.get())
-        vertical_dimension = int(vertical_sheet_variable.get())
-        symmetry_int = int(symmetry_var.get())
-        global atoms
-        atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
-        global unsat_int
-        unsat_int = int(unsat_var.get())
+    if N_all_cbox_var==0:
         calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
-    else:
-        pass
+    elif N_all_cbox_var==1:
+        nitrogenate_all_zig_zag(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
+
 def gui_nitrogenate_all():
     horizontal_dimension = int(horizon_sheet_variable.get())
     vertical_dimension = int(vertical_sheet_variable.get())
@@ -454,20 +461,11 @@ button(root).bottom_buttons()
 button(root).test_button()
 root.mainloop()
 
-
-
 #atoms = build_sheet(3, 3, symmetry=1)
-
 #nitrogenate(atoms, 34)
 #daves_super_saturate(atoms)
-
 #view(atoms, viewer="avogadro")
 #calc_edge_nitrogens(3, 3, method="am1", optimize_geometry=False, make_symmetric=1)
-
 #print data.atomcharges
-
-
-
 #############################################Concurrent Bug List##########################################################
 #asymmetric molecules are viewed as symmetric in .png energy map files for 3x3 sheet
-#calc_edge_nitrogens make checkbox parameter for 'nitrogenate all zig-zag edge carbons'
