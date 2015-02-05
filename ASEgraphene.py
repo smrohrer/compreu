@@ -293,14 +293,25 @@ def nitrogenate_all_zig_zag(nx, nz, method="am1", optimize_geometry=0, make_symm
 
     if make_symmetric == 1:
         edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
-    else:
+    elif make_symmetric == 0:
         pass
     for edge_carbon in edge_carbon_index:
-        #nitrogenate(atoms, edge_carbon)
         symbols = atoms.get_chemical_symbols()
         symbols[edge_carbon] = 'N'
         atoms.set_chemical_symbols(symbols)
-    view(atoms, viewer="avogadro")
+    os.popen("mkdir " + ORCA_filepath + "/all_N_zigzag")
+    os.chdir(ORCA_filepath + "/all_N_zigzag")
+    data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca_nitrogenated_%dx%dsheet.out" % (nx, nz, symmetry_folder_string, nx, nz))
+    moenergies_array = data.moenergies[0]
+    with open("%dx%d_edge_results.txt" % (nx, nz), 'a+') as e:
+        moenergies_array = data.moenergies[0]
+        e.write("\n\nNitrogenated%dx%dsheet" % (nx, nz))
+        e.write("Total SCF energy in eV:\t")
+        e.write(str(data.scfenergies))
+        e.write("\nMolecular orbital energy of HOMO in eV:\t")
+        e.write(str(moenergies_array[data.homos]))
+        e.write("\nMolecular orbital energy of LUMO in eV:\t")
+        e.write(str(moenergies_array[data.homos+1]))
 
 
 
@@ -433,8 +444,8 @@ def gui_calculate():
     symmetry_int = int(symmetry_var.get())
     global atoms
     atoms = build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
-    global unsat_int
-    unsat_int = int(unsat_var.get())
+    # global unsat_int
+    # unsat_int = int(unsat_var.get())
 
     if N_all_cbox_var==0:
         calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
