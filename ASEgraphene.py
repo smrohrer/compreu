@@ -271,7 +271,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.clf()
 
 def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0):
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, all_N_horizontal_dimension_list, ll_N_vertical_dimension_list, all_N_sheet_area_list = (np.array([]) for dummy_var in range(6))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, all_N_horizontal_dimension_list, all_N_vertical_dimension_list, all_N_sheet_area_list = (np.array([]) for dummy_var in range(6))
     pltxlist = [all_N_horizontal_dimension_list, all_N_vertical_dimension_list, all_N_sheet_area_list]
     pltylist = [all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list]
     pltylabel_list = ["SCF Energy", "HOMO Energy", "LUMO Energy"]
@@ -305,8 +305,6 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
 
             for edge_carbon in edge_carbon_index:
                 symbols = atoms.get_chemical_symbols()
-                print symbols
-                print edge_carbon
                 symbols[edge_carbon] = 'N'
                 atoms.set_chemical_symbols(symbols)
             daves_super_saturate(atoms)
