@@ -271,17 +271,13 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.clf()
 
 def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0):
-    all_N_SCF_energy_list = np.array([])
-    all_N_HOMO_energy_list = np.array([])
-    all_N_LUMO_energy_list = np.array([])
-    all_N_horizontal_dimension_list = np.array([])
-    all_N_vertical_dimension_list = np.array([])
-    all_N_sheet_area_list = np.array([])
-    plt_list = [all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, all_N_horizontal_dimension_list, all_N_vertical_dimension_list, all_N_sheet_area_list]
-    pltxlabel_list = ["SCF Energy", "HOMO Energy", "LUMO Energy"]
-    pltylabel_list = ["Horizontal Sheet Dimension", "Vertical Sheet Dimension", "Sheet Area"]
-    for nx in xrange(nx_min, nx_max):
-        for nz in xrange(nz_min, nz_max):
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, all_N_horizontal_dimension_list, ll_N_vertical_dimension_list, all_N_sheet_area_list = (np.array([]) for dummy_var in range(6))
+    pltxlist = [all_N_horizontal_dimension_list, all_N_vertical_dimension_list, all_N_sheet_area_list]
+    pltylist = [all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list]
+    pltylabel_list = ["SCF Energy", "HOMO Energy", "LUMO Energy"]
+    pltxlabel_list = ["Horizontal Sheet Dimension", "Vertical Sheet Dimension", "Sheet Area"]
+    for nx in xrange(nx_min, nx_max+1, 2):
+        for nz in xrange(nz_min, nz_max+1, 2):
             if make_symmetric == 1:
                 atoms = build_sheet(nx, nz, symmetry=1)
                 symmetry_folder_string = "_symmetric"
@@ -306,15 +302,18 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
                 edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
             elif make_symmetric == 0:
                 pass
+
             for edge_carbon in edge_carbon_index:
                 symbols = atoms.get_chemical_symbols()
+                print symbols
+                print edge_carbon
                 symbols[edge_carbon] = 'N'
                 atoms.set_chemical_symbols(symbols)
             daves_super_saturate(atoms)
             #view(atoms, viewer="avogadro")
             os.popen("mkdir " + ORCA_filepath + "/all_N_zigzag")
             os.chdir(ORCA_filepath + "/all_N_zigzag")
-            data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca_nitrogenated_%dx%dsheet.out" % (nx, nz, symmetry_folder_string, nx, nz))
+            data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz))
             moenergies_array = data.moenergies[0]
 
             all_N_SCF_energy_list = np.append(all_N_SCF_energy_list, data.scfenergies)
@@ -326,19 +325,21 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
 
             with open("nitrogenated_edge_results.txt", 'a+') as e:
                 moenergies_array = data.moenergies[0]
-                e.write("\n\nNitrogenated%dx%dsheet" % (nx, nz))
+                e.write("##########################\n")
+                e.write("Nitrogenated %dx%d sheet\n" % (nx, nz))
+                e.write("##########################\n")
                 e.write("Total SCF energy in eV:\t")
                 e.write(str(data.scfenergies))
                 e.write("\nMolecular orbital energy of HOMO in eV:\t")
                 e.write(str(moenergies_array[data.homos]))
-                e.write("\nMolecular orbital energy of LUMO in eV:\t")
+                e.write("\nMolecular orbital energy of LUMO in eV:\t\n\n")
                 e.write(str(moenergies_array[data.homos+1]))
 
-    for y in xrange(0, 3):
-        for x in xrange(4, 7):
-            plt.plot(plt_list[y], plt_list[x])
-            plt.xlabel(pltxlabel_list[y])
-            plt.ylabel(pltylabel_list[x])
+    for x in xrange(0, 3):
+        for y in xrange(0,3):
+            plt.plot(pltxlist[x], pltylist[y])
+            plt.xlabel(pltxlabel_list[x])
+            plt.ylabel(pltylabel_list[y])
             plt.title("Nitrogenated Zig Zag with Unsaturated Nitrogens")
             plt.savefig("unsaturated_nitrogenated_zigzag.png")
             plt.clf()
@@ -495,13 +496,13 @@ def gui_nitrogenate_all():
     
 
 
+nitrogenate_all_zig_zag(3,7,3,7, optimize_geometry=1, make_symmetric=1)
+#     build_param_frame(root)
+#     calc_param_frame(root)
+#     button(root).bottom_buttons()
 
-build_param_frame(root)
-calc_param_frame(root)
-button(root).bottom_buttons()
-
-#button(root).test_button()
-root.mainloop()
+# # #button(root).test_button()
+#     root.mainloop()
 
 #atoms = build_sheet(3, 3, symmetry=1)
 #nitrogenate(atoms, 34)
