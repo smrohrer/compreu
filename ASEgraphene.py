@@ -327,6 +327,21 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
         plt.savefig("%s.png" % pltylabel_list[y])
         plt.clf()
 
+def saturated_nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0):
+    list_pos = [atm_nmbr for atm_nmbr,x in enumerate(atoms.get_atomic_numbers()) if x ==5 ]
+    NposArr = []
+    for entry in list_pos:
+        NposArr.append(atoms.get_positions()[entry].tolist())
+    tree = KDTree(NposArr)
+    list_tree = list(tree.query_pairs(1.430))
+    bondedTo = [[] for i in xrange(len(list_pos))]
+
+    for bond in list_tree:
+        bondedTo[bond[0]].append(bond[1])
+        bondedTo[bond[1]].append(bond[0])
+
+    
+
 
 
 
