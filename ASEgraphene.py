@@ -260,43 +260,68 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
         plt.savefig(title_list[i]+".png")
         plt.clf()
 
-def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0):
+def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0, saturate_nitrogens=0):
     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = (np.array([]) for dummy_var in xrange(3))
     pltylist = all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list
     pltylabel_list = "SCF Energy", "HOMO Energy", "LUMO Energy"
     for nx in xrange(nx_min, nx_max+1, 2):
         for nz in xrange(nz_min, nz_max+1, 2):
+
             if make_symmetric == 1:
                 atoms = build_sheet(nx, nz, symmetry=1)
                 symmetry_folder_string = "_symmetric"
-            else:
+                addition = [0]
+                multiplication = []
+                edge_carbon_index =[]
+
+                for number in xrange(0, 2*nx):
+                    addition.append(number)
+                for number in xrange(2, 2*(nx+2), 2):
+                    multiplication.append(number)
+                    multiplication.append(number)
+                for value in xrange(0, len(addition)):
+                    edge_carbon_index.append(nz*multiplication[value]+addition[value])
+                edge_carbon_index.pop(1)
+                edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
+
+            elif make_symmetric == 0:
                 atoms = build_sheet(nx, nz, symmetry=0)
                 symmetry_folder_string = "_asymmetric"
-            
-            addition = [0]
-            multiplication = []
-            edge_carbon_index =[]
 
-            for number in xrange(0, 2*nx):
-                addition.append(number)
-            for number in xrange(2, 2*(nx+2), 2):
-                multiplication.append(number)
-                multiplication.append(number)
-            for value in xrange(0, len(addition)):
-                edge_carbon_index.append(nz*multiplication[value]+addition[value])
-            edge_carbon_index.pop(1)
+            if saturate_nitrogens == 1:
+                for edge_carbon in edge_carbon_index:
+                    symbols = atoms.get_chemical_symbols()
+                    symbols[edge_carbon] = 'N'
+                    atoms.set_chemical_symbols(symbols)
+                pos = atoms.get_positions()
+                tree = KDTree(atoms.get_positions())
+                list_tree = list(tree.query_pairs(1.430))
+                bondedTo = [[] for i in xrange(len(atoms))]
+                  
+                for bond in list_tree:
+                    bondedTo[bond[0]].append(bond[1])
+                    bondedTo[bond[1]].append(bond[0])
+                
+                Zs = atoms.get_atomic_numbers()
+                for iatom in xrange(len(atoms)):
+                    
+                    nbonds = len(bondedTo[iatom])
+                    Z = Zs[iatom]
+                    
+                    if (Z,nbonds) == (7,2):
+                        
+                        r0 = pos[iatom]
+                        bond1 = pos[ bondedTo[iatom][0]] - r0
+                        bond2 = pos[ bondedTo[iatom][1]]  -r0
+                        rH = -(bond1 + bond2)
+                        rH = 1.09 * rH / np.linalg.norm(rH)
+                        atoms.append(Atom('H',  r0+rH ))
+                        daves_super_saturate(atoms)
 
-            if make_symmetric == 1:
-                edge_carbon_index[:] = [x-len(to_be_removed) for x in edge_carbon_index]
-            elif make_symmetric == 0:
-                pass
+            elif saturate_nitrogens == 0:
+                daves_super_saturate(atoms)
 
-            for edge_carbon in edge_carbon_index:
-                symbols = atoms.get_chemical_symbols()
-                symbols[edge_carbon] = 'N'
-                atoms.set_chemical_symbols(symbols)
-            daves_super_saturate(atoms)
-            #view(atoms, viewer="avogadro")
+            view(atoms, viewer="avogadro")
             os.popen("mkdir " + ORCA_filepath + "/all_N_zigzag")
             os.chdir(ORCA_filepath + "/all_N_zigzag")
             data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz))
@@ -326,19 +351,6 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
         plt.xlabel("Sheet Dimension")
         plt.savefig("%s.png" % pltylabel_list[y])
         plt.clf()
-
-def saturated_nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0):
-    list_pos = [atm_nmbr for atm_nmbr,x in enumerate(atoms.get_atomic_numbers()) if x ==5 ]
-    NposArr = []
-    for entry in list_pos:
-        NposArr.append(atoms.get_positions()[entry].tolist())
-    tree = KDTree(NposArr)
-    list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [[] for i in xrange(len(list_pos))]
-
-    for bond in list_tree:
-        bondedTo[bond[0]].append(bond[1])
-        bondedTo[bond[1]].append(bond[0])
 
     
 
@@ -493,7 +505,8 @@ def gui_nitrogenate_all():
     
 
 
-nitrogenate_all_zig_zag(7,7,5,7, optimize_geometry=1, make_symmetric=1)
+nitrogenate_all_zig_zag(3,3,3,3, optimize_geometry=0, make_symmetric=1, saturate_nitrogens=1)
+#saturated_nitrogenate_all_zig_zag(nx_min=6, nx_max=6, nz_min=6, nz_max=6, method="am1", optimize_geometry=0, make_symmetric=1)
         #build_param_frame(root)
         #calc_param_frame(root)
         #button(root).bottom_buttons()
