@@ -65,21 +65,24 @@ def print_atoms(atoms):
         out=out+atom_str
     return out
 
-def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1", geometry_opt=0, output="temp.out"):
-    if method == "am1" and geometry_opt == 0:
-        parameters1= '{0}\t{1}\t{2}\n\t{3}'.format("%method", "method", method, "end")
+def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", method="am1", geometry_opt=0, output="temp.out", compute_cores=3, convergence_tolerance="default"):
+    if method == "am1":
+        if geometry_opt == 0:
+            parameters1= '{0}\t{1}\t{2}\n\t{3}'.format("%method", "method", method, "end")
+        elif geometry_opt == 1:
+            if convergence_tolerance == "default":
+                parameters1= '{0}\n\t{1}\n\t{2}\n\n{3}\n{4}\n\n{5}\n{6}\n\n'.format("%method method am1", "method OPT", "end", "%SCF MAXITER 300", "     end", "%geom MaxIter 250", "      end")
+            else:
+                parameters1= '{0}\n\t{1}\n\t{2}\n\n{3}\n{4}\n{5}\n\n{6}\n{7}\n\n'.format("%method method am1", "method OPT", "end", "%SCF MAXITER 300", "     Convergence " + convergence_tolerance, "     end", "%geom MaxIter 250", "      end")
 
-    elif method == "am1" and geometry_opt == 1:
-        parameters1= '{0}\n\t{1}\n\t{2}\n\n{3}\n{4}\n\n{5}\n{6}\n\n'.format("%method method am1", "method OPT", "end", "%SCF MAXITER 300", "     end", "%geom MaxIter 250", "      end")
-
-    elif method == "DFT" and geometry_opt== 0:
-        parameters1= '{0}\t{1}\n'.format("!", "DFT-Energy")
-
-    elif method == "DFT" and geometry_opt == 1:
-        parameters1= '{0}\t{1}\n'.format("!", "Good-Opt")
+    elif method == "DFT":
+        if geometry_opt == 0:
+            parameters1 = '{0}\t{1}\n'.format("!", "DFT-Energy")
+        elif geometry_opt == 1:
+            parameters1= '{0}\t{1}\n'.format("!", "Good-Opt")
         
     out = ''
-    parameters0 = '{0}\n{1}\n\n'.format("%pal nprocs 2", "     end")
+    parameters0 = '{0}\n{1}\n\n'.format("%pal nprocs " + str(compute_cores), "     end")
     parameters2 ='{0}\t{1}\t{2}\t{3}\n'.format("*", "xyz", charge, multiplicity)
     out=out+parameters0+parameters1+parameters2
     end_of_atom_coordinates="*"
@@ -262,8 +265,8 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
 
 def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0, saturate_nitrogens=0):
     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = (np.array([]) for dummy_var in xrange(3))
-    pltylist = all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list
     pltylabel_list = "SCF Energy", "HOMO Energy", "LUMO Energy"
+    sheet_dimensions, sheet_count = ([] for dummy_var in xrange(2))
     for nx in xrange(nx_min, nx_max+1, 2):
         for nz in xrange(nz_min, nz_max+1, 2):
 
@@ -297,19 +300,14 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
                 tree = KDTree(atoms.get_positions())
                 list_tree = list(tree.query_pairs(1.430))
                 bondedTo = [[] for i in xrange(len(atoms))]
-                  
                 for bond in list_tree:
                     bondedTo[bond[0]].append(bond[1])
                     bondedTo[bond[1]].append(bond[0])
-                
                 Zs = atoms.get_atomic_numbers()
                 for iatom in xrange(len(atoms)):
-                    
                     nbonds = len(bondedTo[iatom])
                     Z = Zs[iatom]
-                    
                     if (Z,nbonds) == (7,2):
-                        
                         r0 = pos[iatom]
                         bond1 = pos[ bondedTo[iatom][0]] - r0
                         bond2 = pos[ bondedTo[iatom][1]]  -r0
@@ -321,18 +319,22 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
             elif saturate_nitrogens == 0:
                 daves_super_saturate(atoms)
 
-            view(atoms, viewer="avogadro")
+            #view(atoms, viewer="avogadro")
             os.popen("mkdir " + ORCA_filepath + "/all_N_zigzag")
             os.chdir(ORCA_filepath + "/all_N_zigzag")
-            data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz))
+            if (nx>4 and nx<6) and (nz>4 and nz<6):
+                data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz), convergence_tolerance="Medium")
+            if nx>6:
+                data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz), convergence_tolerance="Loose")
+            else:
+                data = make_orca(atoms, filename="nitrogenated_%dx%dgraphene.inp" % (nx, nz), multiplicity="1", method=method, geometry_opt=optimize_geometry, output= ORCA_filepath + "/all_N_zigzag/orca%s_nitrogenated_%dx%dsheet.out" % (symmetry_folder_string, nx, nz))
             moenergies_array = data.moenergies[0]
-
-            all_N_SCF_energy_list = np.append(all_N_SCF_energy_list, data.scfenergies)
+            all_N_SCF_energy_list = np.append(all_N_SCF_energy_list, int(data.scfenergies))
             all_N_HOMO_energy_list = np.append(all_N_HOMO_energy_list, moenergies_array[data.homos])
             all_N_LUMO_energy_list = np.append(all_N_LUMO_energy_list, moenergies_array[data.homos+1])
+            sheet_dimensions.append("%sx%s" % (nx, nz))
 
             with open("nitrogenated_edge_results.txt", 'a+') as e:
-                moenergies_array = data.moenergies[0]
                 e.write("\n##########################\n")
                 e.write("Nitrogenated %dx%d sheet\n" % (nx, nz))
                 e.write("##########################\n")
@@ -342,12 +344,15 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
                 e.write(str(moenergies_array[data.homos]))
                 e.write("\nMolecular orbital energy of LUMO in eV:\t")
                 e.write(str(moenergies_array[data.homos+1]))
-
+    for dimension in xrange(0, len(sheet_dimensions)):
+        sheet_count.append(dimension)
+    sheet_count = [x+0.2 for x in sheet_count]
     for y in xrange(0, 3):
+        pltylist = all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list
         rectangles = plt.bar(np.arange(all_N_SCF_energy_list.size), pltylist[y], 0.4, alpha=0.4, color='b')
         plt.title("%s vs Sheet Dimensions" % pltylabel_list[y])
         plt.ylabel(pltylabel_list[y])
-        plt.xticks(index+0.2, ("3x3","3x5", "3x7", "5x3", "5x5", "7x3"))
+        plt.xticks(sheet_count, sheet_dimensions)
         plt.xlabel("Sheet Dimension")
         plt.savefig("%s.png" % pltylabel_list[y])
         plt.clf()
@@ -505,7 +510,7 @@ def gui_nitrogenate_all():
     
 
 
-nitrogenate_all_zig_zag(3,3,3,3, optimize_geometry=0, make_symmetric=1, saturate_nitrogens=1)
+nitrogenate_all_zig_zag(7,7,3,7, optimize_geometry=1, make_symmetric=1, saturate_nitrogens=1)
 #saturated_nitrogenate_all_zig_zag(nx_min=6, nx_max=6, nz_min=6, nz_max=6, method="am1", optimize_geometry=0, make_symmetric=1)
         #build_param_frame(root)
         #calc_param_frame(root)
