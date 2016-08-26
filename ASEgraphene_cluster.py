@@ -12,9 +12,10 @@ from scipy.spatial import KDTree
 from collections import Counter
 import subprocess
 import os
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+from joblib import Parallel, delayed
 import pickle
+# import matplotlib.pyplot as plt
+# import matplotlib.cm as cm
 # from Tkinter import *
 
 EV_TO_KCAL = 23.0605
@@ -22,7 +23,7 @@ H2_TOTAL_ENERGY = -634.997248712
 H_ENERGY = -13.6
 
 np.set_printoptions(precision=3,suppress=True)
-ORCA_filepath = os.getcwd()
+ORCA_filepath = "/home/smrohrer"
 
 def build_sheet(nx, nz, symmetry=0):
     nx=nx+1
@@ -111,7 +112,7 @@ def make_orca(atoms, filename="filename.inp", charge="0", multiplicity="1", meth
         f.write(parameters)
         f.write(print_atoms(atoms))
         f.write(end_of_atom_coordinates)
-    subprocess.call("$HOME/Library/Orca/orca "+ filename + " > " + output, shell=True)
+    subprocess.call("/usr/local/orca/orca "+ filename + " > " + output, shell=True)
     return parse(output)
 
 def parse(filename):
@@ -798,8 +799,8 @@ def hydrogenate_random(nx=5, nz=3, method="am1", optimize_geometry=0, iter=5, di
 
             data = make_orca(atoms, filename="sheet"+str(i+1)+".inp", multiplicity="1", method=method,
                              geometry_opt=optimize_geometry,
-                             output=ORCA_filepath+"/hydrogenate_random/sheet"+str(i+1)+".out")
-            cleanup(ORCA_filepath + "/hydrogenate_random/")
+                             output=ORCA_filepath+directory+"/sheet"+str(i+1)+".out")
+            cleanup(ORCA_filepath + directory + "/")
 
             if optimize_geometry == 0:
                 xyz = open("step" + str(i + 1) + ".xyz", "w")
@@ -814,6 +815,8 @@ def hydrogenate_random(nx=5, nz=3, method="am1", optimize_geometry=0, iter=5, di
                 xyz.close()
 
             i += 1
+
+    condense_output(directory)
 
 def sh_vary_width(unit_cells=2, nx=5, nz_min=3, nz_max=9, method="am1", optimize_geometry=0, make_symmetric=0):
 
@@ -905,8 +908,9 @@ def NH_combinations(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetri
     scf = []
     homo = []
     lumo = []
-    os.popen("mkdir " + ORCA_filepath + "/NH_combinations")
-    os.chdir(ORCA_filepath + "/NH_combinations")
+    directory = ORCA_filepath + "/NH_combinations" + str(nx) + "x" + str(nz) + "/"
+    os.popen("mkdir " + directory)
+    os.chdir(directory)
     results = open("results.txt", "w")
     results.truncate()
     # find possible combinations, expressed in binary
@@ -994,15 +998,10 @@ def NH_combinations(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetri
         # saturate C's on armchair edges
         daves_super_saturate(atoms)
 
-        # create an image of the sheet
-        atoms1 = atoms.copy()
-        atoms1.rotate("x", np.pi/2.0)
-        write(combo[0]+"_"+combo[1]+".png", atoms1)
-
-        # # run Orca
-        # mult = "1" if nH%2==0 else "2"
-        # data = make_orca(atoms, filename=combo[0]+"_"+combo[1]+".inp",multiplicity=mult, method=method, geometry_opt=optimize_geometry, output=ORCA_filepath+"/NH_combinations/"+combo[0]+"_"+combo[1]+".out")
-        #
+        # run Orca
+        mult = "1" if nH%2==0 else "2"
+        data = make_orca(atoms, filename=combo[0]+"_"+combo[1]+".inp",multiplicity=mult, method=method, geometry_opt=optimize_geometry, output=directory+combo[0]+"_"+combo[1]+".out")
+        cleanup(directory)
         # try:
         #     moenergies_array = data.moenergies[0]
         #     scf.append(data.scfenergies)
@@ -1022,7 +1021,7 @@ def NH_combinations(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetri
         #     results.write("##########################\n")
         #     results.write("SCF NOT CONVERGED\n")
 
-    cleanup(ORCA_filepath+"/NH_combinations")
+    condense_output(directory)
 
 def NH_combinations_plot():
     os.chdir(ORCA_filepath + "/NH_combinations")
@@ -2138,8 +2137,7 @@ def condense_output(directory):
                 NH_index = []
                 H_attachment = []
                 for iatom in range(0, natom):
-                    if (Zs[iatom] == 6 and len(bondedTo[iatom]) == 4) or (
-                            Zs[iatom] == 7 and len(bondedTo[iatom]) == 3):
+                    if (Zs[iatom] == 6 and len(bondedTo[iatom]) == 4) or (Zs[iatom] == 7 and len(bondedTo[iatom]) == 3):
                         H_attachment.append(1)
                     elif Zs[iatom] == 6 or Zs[iatom] == 7:
                         H_attachment.append(0)
@@ -2166,29 +2164,6 @@ def condense_output(directory):
     os.rmdir(directory)
     pickle.dump(results, open(directory[:-1], "w"))
 
-def pickle_complete_output(directory):
-    os.chdir(directory)
-    path_contents = os.listdir(directory)
-
-    results = []
-
-    for filename in path_contents:
-        if filename[-4:] == ".out":
-            file = ccopen(directory + filename)
-            data = file.parse()
-            results.append(data)
-            os.remove(filename)
-
-    pickle.dump(results, open("out", "w"))
-
-def draw_sheet_map(nx=5, nz=3):
-    atoms = build_sheet(nx, nz, symmetry=1)
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    for i, atom in enumerate(atoms):
-        plt.plot(atom.position[0], atom.position[2], '.')
-        plt.text(atom.position[0], atom.position[2], str(i))
-    plt.savefig(str(nx)+"x"+str(nz)+"map.png")
 
 ###Tkinter Section Below
 ################################################################################################################
@@ -2336,7 +2311,11 @@ def gui_nitrogenate_all():
     unsat_int = int(unsat_var.get())
     nitrogenate_all_zig_zag(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
 
-draw_sheet_map(5,5)
+dimensions = []
+for i in range(3,11,2):
+    for k in range(3,11,2):
+        dimensions.append([i,k])
+Parallel(n_jobs=-1, verbose=1)(delayed(NH_combinations)(nx=d[0], nz=d[1], optimize_geometry=1) for d in dimensions)
 
     #saturated_nitrogenate_all_zig_zag(nx_min=6, nx_max=6, nz_min=6, nz_max=6, method="am1", optimize_geometry=0, make_symmetric=1)
         #build_param_frame(root)

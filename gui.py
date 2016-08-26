@@ -1,5 +1,5 @@
 from Tkinter import *
-import ASE_Graphene
+import ASEgraphene
 
 #Requires 'hovering cursor' tooltip for all major components
 
@@ -103,17 +103,17 @@ def calc_param_frame(master):
 	checkbox(lbl_calc_frame).opt_geo_cbox()
 
 def gui_view():
-        ##setting sheet dimension parameter variables from ASE_Graphene.py to local variables
+        ##setting sheet dimension parameter variables from ASEgraphene.py to local variables
         horizontal_dimension = int(horizon_sheet_variable.get())
         vertical_dimension = int(vertical_sheet_variable.get())
         symmetry_int = int(symmetry_var.get())
-        atoms = ASE_Graphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+        atoms = ASEgraphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
         unsat_int = int(unsat_var.get())
         if unsat_int==0:
-        	ASE_Graphene.daves_super_saturate(atoms)
+        	ASEgraphene.daves_super_saturate(atoms)
         elif unsat_int==1:
         	pass
-        ASE_Graphene.view(atoms, viewer="avogadro")
+        ASEgraphene.view(atoms, viewer="avogadro")
 
 def gui_calculate():
 	if selected_calculator=="ORCA":
@@ -121,11 +121,11 @@ def gui_calculate():
 		horizontal_dimension = int(horizon_sheet_variable.get())
 		vertical_dimension = int(vertical_sheet_variable.get())
 		symmetry_int = int(symmetry_var.get())
-		atoms = ASE_Graphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
+		atoms = ASEgraphene.build_sheet(horizontal_dimension, vertical_dimension, symmetry=symmetry_int)
 		unsat_int = int(unsat_var.get())
 
 		if unsat_int==0:
-			ASE_Graphene.daves_super_saturate(atoms)
+			ASEgraphene.daves_super_saturate(atoms)
 		elif unsat_int==1:
 			pass
 
@@ -134,7 +134,7 @@ def gui_calculate():
 		elif selected_geometry_opt==0:
 			opt_geom_truefalse = False
 
-		ASE_Graphene.calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=opt_geom_truefalse, make_symmetric=selected_geometry_opt)
+		ASEgraphene.calc_edge_nitrogens(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=opt_geom_truefalse, make_symmetric=selected_geometry_opt)
 	else:
 		pass
 
