@@ -2048,7 +2048,7 @@ def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=No
 
     return atoms
 
-def random_structure(rings=1, pyrroles=1, nitrogens=1):
+def random_structure(rings=1, pyrroles=0, nitrogens=1, oxygens=1):
 
     # start with a single benzene ring
     atoms = Atoms('C6',
@@ -2124,7 +2124,6 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
             C4 = bondedTo[C2][1]
         else:
             C4 = bondedTo[C2][0]
-        #bond = pos[C2] - pos[C1]
         N_pos = (pos[C1] + pos[C2] + pos[C3] + pos[C4]) / 4
         map = [False for i in range(len(atoms))]
         map[C1] = True
@@ -2156,6 +2155,43 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
         Zs[atom] = 7
         atoms.set_atomic_numbers(Zs)
 
+    coBondLength = 1.36
+    ohBondLength = 0.96
+    ohBondAngle = 109.5 * np.pi / 180
+    for iO in range(oxygens):
+        pos = atoms.get_positions()
+        tree = KDTree(pos)
+        list_tree = list(tree.query_pairs(1.430))
+        bondedTo = [[] for i in range(len(atoms))]
+        for bond in list_tree:
+            bondedTo[bond[0]].append(bond[1])
+            bondedTo[bond[1]].append(bond[0])
+
+        # find a edge atoms
+        Zs = atoms.get_atomic_numbers()
+        edge_atoms = []
+        for iatom, neighbors in enumerate(bondedTo):
+            if Zs[iatom] == 6 and len(neighbors) == 2:
+                if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
+                    edge_atoms.append(iatom)
+
+        # choose a random edge atom to attach an alcohol
+        atom = random.choice(edge_atoms)
+
+        r0 = pos[atom]
+        bond1 = pos[bondedTo[atom][0]] - r0
+        bond2 = pos[bondedTo[atom][1]] - r0
+        CO_bond = -(bond1 + bond2)
+        CO_bond = coBondLength * CO_bond / np.linalg.norm(CO_bond)
+        atoms.append(Atom('O', r0 + CO_bond))
+        rotation = [[np.cos(ohBondAngle), 0, np.sin(ohBondAngle)],
+                    [0, 1, 0],
+                    [-np.sin(ohBondAngle), 0, np.cos(ohBondAngle)]]
+        OH_bond = np.dot(-CO_bond, rotation)
+        OH_bond = ohBondLength * OH_bond / np.linalg.norm(OH_bond)
+        atoms.append(Atom('H', r0 + CO_bond + OH_bond))
+        
+
     daves_super_saturate(atoms)
 
     atoms1 = atoms.copy()
@@ -2163,7 +2199,7 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
     write("random_structure.png", atoms1)
 
 
-random_structure(rings=20, pyrroles=1, nitrogens=10)
+random_structure(rings=20, pyrroles=1, nitrogens=10, oxygens=1)
 
 def cleanup(directory):
     os.chdir(directory)
