@@ -2116,10 +2116,16 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
             C1 = random.choice(edge_atoms)
             if len(bondedTo[bondedTo[C1][0]]) == 2:
                 C2 = bondedTo[C1][0]
+                C3 = bondedTo[C1][1]
             elif len(bondedTo[bondedTo[C1][1]]) == 2:
                 C2 = bondedTo[C1][1]
-        bond = pos[C2] - pos[C1]
-        N_pos = pos[C1] + bond / 2
+                C3 = bondedTo[C1][0]
+        if bondedTo[C2][0]==C1:
+            C4 = bondedTo[C2][1]
+        else:
+            C4 = bondedTo[C2][0]
+        #bond = pos[C2] - pos[C1]
+        N_pos = (pos[C1] + pos[C2] + pos[C3] + pos[C4]) / 4
         map = [False for i in range(len(atoms))]
         map[C1] = True
         map[C2] = True
