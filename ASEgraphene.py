@@ -11,6 +11,7 @@ import logging
 from scipy.spatial import KDTree
 from collections import Counter
 import subprocess
+import math
 import os
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -2048,6 +2049,21 @@ def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=No
 
     return atoms
 
+def rotation_matrix(axis, theta):
+    """
+    Return the rotation matrix associated with counterclockwise rotation about
+    the given axis by theta radians.
+    """
+    axis = np.asarray(axis)
+    axis = axis/math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta/2.0)
+    b, c, d = -axis*math.sin(theta/2.0)
+    aa, bb, cc, dd = a*a, b*b, c*c, d*d
+    bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
+    return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
+                     [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
+                     [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
+
 def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
 
     # start with a single benzene ring
@@ -2190,6 +2206,7 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
         OH_bond = np.dot(-CO_bond, rotation)
         OH_bond = ohBondLength * OH_bond / np.linalg.norm(OH_bond)
         atoms.append(Atom('H', r0 + CO_bond + OH_bond))
+
     for iO in range(nCOOH):
         atom = random.choice(edge_atoms)
 
@@ -2199,11 +2216,16 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
         CC_bond = -(bond1 + bond2)
         CC_bond = 1.4 * CC_bond / np.linalg.norm(CC_bond)
         atoms.append(Atom('C', r0 + CC_bond))
+        
+        dihedralRotationUp = rotation_matrix(CC_bond, np.pi/2)
+        dihedralRotationDown = rotation_matrix(CC_bond, -1 * np.pi/2)
+
         angle1 = 120 * 2.0 * np.pi / 360
         rotation1 = [[np.cos(angle1), 0, np.sin(angle1)],
                      [0, 1, 0],
                      [-np.sin(angle1), 0, np.cos(angle1)]]
         CO_double_bond = np.dot(-CC_bond, rotation1)
+        CO_double_bond = np.dot(CO_double_bond, dihedralRotationUp)
         CO_double_bond = 1.2 * CO_double_bond / np.linalg.norm(CO_double_bond)
         atoms.append(Atom('O', r0 + CC_bond + CO_double_bond))
         angle2 = -120 * 2.0 * np.pi / 360
@@ -2211,12 +2233,12 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
                      [0, 1, 0],
                      [-np.sin(angle2), 0, np.cos(angle2)]]
         CO_bond = np.dot(-CC_bond, rotation2)
+        CO_bond = np.dot(CO_bond, dihedralRotationUp)
         CO_bond = 1.4 * CO_bond / np.linalg.norm(CO_bond)
         atoms.append(Atom('O', r0 + CC_bond + CO_bond))
         angle3 = 109 * 2 * np.pi / 360
-        rotation3 = [[np.cos(angle3), 0, np.sin(angle3)],
-                     [0, 1, 0],
-                     [-np.sin(angle3), 0, np.cos(angle3)]]
+        OH_rotation_axis = np.cross(CO_bond,CO_double_bond)
+        rotation3 = rotation_matrix(OH_rotation_axis,angle3)
         OH_bond = np.dot(-CO_bond, rotation3)
         OH_bond = 0.96 * OH_bond / np.linalg.norm(OH_bond)
         atoms.append(Atom('H', r0 + CC_bond + CO_bond + OH_bond))
@@ -2228,8 +2250,17 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
     atoms1.rotate("x", np.pi / 2.0)
     write("random_structure.png", atoms1)
 
+    xyz = open("test.xyz", "w")
+    xyz.write(str(len(atoms1))+"\n")
+    xyz.write("comment\n")
+    symbols_temp = atoms1.get_chemical_symbols()
+    pos_temp = atoms1.get_positions()
+    for iatom in range(0,len(atoms1)):
+        xyz.write(symbols_temp[iatom]+"\t"+str(pos_temp[iatom][0])+"\t"+str(pos_temp[iatom][1])+"\t"+str(pos_temp[iatom][2])+"\n")
+    xyz.close()
 
-random_structure(rings=20, pyrroles=0, nitrogens=5, alcohols=0, nCOOH=3)
+
+random_structure(rings=20, pyrroles=0, nitrogens=5, alcohols=0, nCOOH=1)
 
 def cleanup(directory):
     os.chdir(directory)
