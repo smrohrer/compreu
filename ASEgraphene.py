@@ -2048,7 +2048,7 @@ def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=No
 
     return atoms
 
-def random_structure(rings=1, pyrroles=0, nitrogens=1, oxygens=1):
+def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
 
     # start with a single benzene ring
     atoms = Atoms('C6',
@@ -2158,7 +2158,7 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, oxygens=1):
     coBondLength = 1.36
     ohBondLength = 0.96
     ohBondAngle = 109.5 * np.pi / 180
-    for iO in range(oxygens):
+    for iO in range(alcohols):
         pos = atoms.get_positions()
         tree = KDTree(pos)
         list_tree = list(tree.query_pairs(1.430))
@@ -2190,6 +2190,36 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, oxygens=1):
         OH_bond = np.dot(-CO_bond, rotation)
         OH_bond = ohBondLength * OH_bond / np.linalg.norm(OH_bond)
         atoms.append(Atom('H', r0 + CO_bond + OH_bond))
+    for iO in range(nCOOH):
+        atom = random.choice(edge_atoms)
+
+        r0 = pos[atom]
+        bond1 = pos[bondedTo[atom][0]] - r0
+        bond2 = pos[bondedTo[atom][1]] - r0
+        CC_bond = -(bond1 + bond2)
+        CC_bond = 1.4 * CC_bond / np.linalg.norm(CC_bond)
+        atoms.append(Atom('C', r0 + CC_bond))
+        angle1 = 120 * 2.0 * np.pi / 360
+        rotation1 = [[np.cos(angle1), 0, np.sin(angle1)],
+                     [0, 1, 0],
+                     [-np.sin(angle1), 0, np.cos(angle1)]]
+        CO_double_bond = np.dot(-CC_bond, rotation1)
+        CO_double_bond = 1.2 * CO_double_bond / np.linalg.norm(CO_double_bond)
+        atoms.append(Atom('O', r0 + CC_bond + CO_double_bond))
+        angle2 = -120 * 2.0 * np.pi / 360
+        rotation2 = [[np.cos(angle2), 0, np.sin(angle2)],
+                     [0, 1, 0],
+                     [-np.sin(angle2), 0, np.cos(angle2)]]
+        CO_bond = np.dot(-CC_bond, rotation2)
+        CO_bond = 1.4 * CO_bond / np.linalg.norm(CO_bond)
+        atoms.append(Atom('O', r0 + CC_bond + CO_bond))
+        angle3 = 109 * 2 * np.pi / 360
+        rotation3 = [[np.cos(angle3), 0, np.sin(angle3)],
+                     [0, 1, 0],
+                     [-np.sin(angle3), 0, np.cos(angle3)]]
+        OH_bond = np.dot(-CO_bond, rotation3)
+        OH_bond = 0.96 * OH_bond / np.linalg.norm(OH_bond)
+        atoms.append(Atom('H', r0 + CC_bond + CO_bond + OH_bond))
         
 
     daves_super_saturate(atoms)
@@ -2199,7 +2229,7 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, oxygens=1):
     write("random_structure.png", atoms1)
 
 
-random_structure(rings=20, pyrroles=1, nitrogens=10, oxygens=1)
+random_structure(rings=20, pyrroles=0, nitrogens=5, alcohols=0, nCOOH=3)
 
 def cleanup(directory):
     os.chdir(directory)
