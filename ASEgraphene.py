@@ -42,11 +42,11 @@ def build_sheet(nx, nz, symmetry=0):
     atoms.pop(0)
 
     if symmetry == 1:
-        print "Making graphene sheet symmetric"
+        print("Making graphene sheet symmetric")
         global to_be_removed
         to_be_removed = []
         sym_fix_int = nz-1
-        for i in xrange(2, nz+sym_fix_int, 2):
+        for i in range(2, nz+sym_fix_int, 2):
             to_be_removed.append(2*i-2)
             to_be_removed.append(2*i-1)
         
@@ -55,7 +55,7 @@ def build_sheet(nx, nz, symmetry=0):
         for entry in to_be_removed:
             atoms.pop(entry)
     else:
-        print "Molecule was not made symmetric"
+        print("Molecule was not made symmetric")
     return atoms
 
 
@@ -130,7 +130,7 @@ def daves_super_saturate(atoms):
     pos = atoms.get_positions()
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [ [] for i in xrange(len(atoms))] 
+    bondedTo = [ [] for i in range(len(atoms))] 
 
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
@@ -138,11 +138,11 @@ def daves_super_saturate(atoms):
 
     Zs = atoms. get_atomic_numbers()
 # figure out what needs a hydrogen atom
-    for iatom in xrange(len(atoms)):
+    for iatom in range(len(atoms)):
         nbonds = len( bondedTo[iatom] )
         Z = Zs[iatom]
         if (Z,nbonds) == (6,2):
-            print "we should add H to atom ", iatom
+            print("we should add H to atom ", iatom)
             
 
             r0 = pos[iatom, :]
@@ -157,7 +157,7 @@ def find_edge_atoms(atoms):
     pos = atoms.get_positions()
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [ [] for i in xrange(len(atoms))] 
+    bondedTo = [ [] for i in range(len(atoms))] 
 
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
@@ -165,7 +165,7 @@ def find_edge_atoms(atoms):
 
     Zs = atoms. get_atomic_numbers()
     # figure out what needs a hydrogen atom
-    for iatom in xrange(len(atoms)):
+    for iatom in range(len(atoms)):
         nbonds = len( bondedTo[iatom] )
         Z = Zs[iatom]
         if (Z,nbonds) == (6,2):
@@ -175,7 +175,7 @@ def find_edge_atoms(atoms):
 
 def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_symmetric=0, sub_all_zigzag=0):
     if make_symmetric == 1:
-        print "atoms sheet at start of calc is symmetric"
+        print("atoms sheet at start of calc is symmetric")
         atoms = build_sheet(nx, nz, symmetry=1)
         symmetry_folder_string = "_symmetric"
         ##set parameter for multiplicity of 2 here##########
@@ -207,12 +207,12 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     multiplication = []
     edge_carbon_index =[]
 
-    for number in xrange(0, 2*nx):
+    for number in range(0, 2*nx):
         addition.append(number)
-    for number in xrange(2, 2*(nx+2), 2):
+    for number in range(2, 2*(nx+2), 2):
         multiplication.append(number)
         multiplication.append(number)
-    for value in xrange(0, len(addition)):
+    for value in range(0, len(addition)):
         edge_carbon_index.append(nz*multiplication[value]+addition[value])
     edge_carbon_index.pop(1)
 
@@ -231,7 +231,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     nitrogenated_x_pos, nitrogenated_y_pos, nitrogenated_scf, nitrogenated_HOMO, nitrogenated_LUMO = (np.array([]) for i in range(5))
     for index_number in edge_carbon_index:
         if make_symmetric == 1:
-            print "nitrogenate make atoms sheet is symmetric"
+            print("nitrogenate make atoms sheet is symmetric")
             atoms = build_sheet(nx, nz, symmetry=1)
         else:
             atoms = build_sheet(nx, nz, symmetry=0)
@@ -269,7 +269,7 @@ def calc_edge_nitrogens(nx="1", nz="1", method="am1", optimize_geometry=0, make_
     plt.ylabel("Atom Z Position on Sheet")
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    for i in xrange(3):
+    for i in range(3):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         plt.xlabel("Atom X Position on Sheet")
@@ -290,23 +290,23 @@ def get_outer_zigzag_atoms(nx, nz):
     multiplication = []
     edge_carbon_index = []
 
-    for number in xrange(0, 2 * nx):
+    for number in range(0, 2 * nx):
         addition.append(number)
-    for number in xrange(2, 2 * (nx + 2), 2):
+    for number in range(2, 2 * (nx + 2), 2):
         multiplication.append(number)
         multiplication.append(number)
-    for value in xrange(0, len(addition)):
+    for value in range(0, len(addition)):
         edge_carbon_index.append(nz * multiplication[value] + addition[value])
     edge_carbon_index.pop(1)
     edge_carbon_index[:] = [x - len(to_be_removed) for x in edge_carbon_index]
     return edge_carbon_index
 
 def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimize_geometry=0, make_symmetric=0, saturate_nitrogens=0):
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = (np.array([]) for dummy_var in xrange(3))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = (np.array([]) for dummy_var in range(3))
     pltylabel_list = "SCF Energy", "HOMO Energy", "LUMO Energy"
-    sheet_dimensions, sheet_count = ([] for dummy_var in xrange(2))
-    for nx in xrange(nx_min, nx_max+1, 2):
-        for nz in xrange(nz_min, nz_max+1, 2):
+    sheet_dimensions, sheet_count = ([] for dummy_var in range(2))
+    for nx in range(nx_min, nx_max+1, 2):
+        for nz in range(nz_min, nz_max+1, 2):
 
             if make_symmetric == 1:
                 atoms = build_sheet(nx, nz, symmetry=1)
@@ -325,12 +325,12 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
                 pos = atoms.get_positions()
                 tree = KDTree(atoms.get_positions())
                 list_tree = list(tree.query_pairs(1.430))
-                bondedTo = [[] for i in xrange(len(atoms))]
+                bondedTo = [[] for i in range(len(atoms))]
                 for bond in list_tree:
                     bondedTo[bond[0]].append(bond[1])
                     bondedTo[bond[1]].append(bond[0])
                 Zs = atoms.get_atomic_numbers()
-                for iatom in xrange(len(atoms)):
+                for iatom in range(len(atoms)):
                     nbonds = len(bondedTo[iatom])
                     Z = Zs[iatom]
                     if (Z,nbonds) == (7,2):
@@ -370,10 +370,10 @@ def nitrogenate_all_zig_zag(nx_min, nx_max, nz_min, nz_max, method="am1", optimi
                 e.write(str(moenergies_array[data.homos]))
                 e.write("\nMolecular orbital energy of LUMO in eV:\t")
                 e.write(str(moenergies_array[data.homos+1]))
-    for dimension in xrange(0, len(sheet_dimensions)):
+    for dimension in range(0, len(sheet_dimensions)):
         sheet_count.append(dimension)
     sheet_count = [x+0.2 for x in sheet_count]
-    for y in xrange(0, 3):
+    for y in range(0, 3):
         pltylist = all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list
         rectangles = plt.bar(np.arange(all_N_SCF_energy_list.size), pltylist[y], 0.4, alpha=0.4, color='b')
         plt.title("%s vs Sheet Dimensions" % pltylabel_list[y])
@@ -434,7 +434,7 @@ def selectively_nitrogenate(unit_cells = 1, nx=5, nz=3, method="am1", optimize_g
     tree = KDTree(atoms.get_positions())
     # find pairs of atoms that are bonded; they are bonded if their distance apart is less than 1.430
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [[] for i in xrange(len(atoms))]
+    bondedTo = [[] for i in range(len(atoms))]
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
@@ -442,13 +442,13 @@ def selectively_nitrogenate(unit_cells = 1, nx=5, nz=3, method="am1", optimize_g
     xC = [pos[i][0] for i in edge_carbon_index]
     uxC = np.unique(xC)
     # sort into pairs of atoms at the same x position
-    sorted_Cs = [[] for i in xrange(len(uxC))]
+    sorted_Cs = [[] for i in range(len(uxC))]
     for C in Cs:
         sorted_Cs[list(uxC).index(pos[C][0])].append(C)
     # replace with N
     for step,position in enumerate(order):
-        for k in xrange(0,cell+1):
-            for m in xrange(0,2):
+        for k in range(0,cell+1):
+            for m in range(0,2):
                 iatom = sorted_Cs[position+k*cell*nx][m]
                 symbols = atoms.get_chemical_symbols()
                 symbols[iatom] = 'N'
@@ -481,14 +481,14 @@ def selectively_nitrogenate(unit_cells = 1, nx=5, nz=3, method="am1", optimize_g
 
 
 def selectively_hydrogenate_nitrogens(unit_cells=1, nx=5, nz=3, method="am1", optimize_geometry=0, oxide=0):
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = ([] for dummy_var in xrange(3))
-    descriptions, sheet_count = ([] for dummy_var in xrange(2))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list = ([] for dummy_var in range(3))
+    descriptions, sheet_count = ([] for dummy_var in range(2))
     # determine the order of N positions to add H
     order = []
     for i in range(0, nx/2):
         order.append(nx/2-i-1)
         order.append(nx-i-1)
-    for cell in xrange(0,unit_cells):
+    for cell in range(0,unit_cells):
         all_N_SCF_energy_list.append([])
         all_N_HOMO_energy_list.append([])
         all_N_LUMO_energy_list.append([])
@@ -522,7 +522,7 @@ def selectively_hydrogenate_nitrogens(unit_cells=1, nx=5, nz=3, method="am1", op
         tree = KDTree(atoms.get_positions())
         # find pairs of atoms that are bonded; they are bonded if their distance apart is less than 1.430
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in xrange(len(atoms))]
+        bondedTo = [[] for i in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -532,14 +532,14 @@ def selectively_hydrogenate_nitrogens(unit_cells=1, nx=5, nz=3, method="am1", op
         xN = [pos[i][0] for i in edge_carbon_index]
         uxN = np.unique(xN)
         # sort into pairs of atoms at the same x position
-        sorted_Ns = [[] for i in xrange(len(uxN))]
+        sorted_Ns = [[] for i in range(len(uxN))]
         for N in Ns:
             sorted_Ns[list(uxN).index(pos[N][0])].append(N)
         # add H and do calculation
         for step,position in enumerate(order):
             changed_Ns = []
-            for k in xrange(0,cell+1):
-                for m in xrange(0,2):
+            for k in range(0,cell+1):
+                for m in range(0,2):
                     iatom = sorted_Ns[position+k*cell*nx][m]
                     changed_Ns.append(iatom)
                     r0 = pos[iatom]
@@ -588,15 +588,15 @@ def selectively_hydrogenate_nitrogens(unit_cells=1, nx=5, nz=3, method="am1", op
     return descriptions, all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list
 
 def hydrogenate_inner_carbon(unit_cells=1, nx=5, nz=3, method="am1", optimize_geometry=0):
-    N_SCF, N_HOMO, N_LUMO = ([] for dummy_var in xrange(3))
-    C_SCF, C_HOMO, C_LUMO = ([] for dummy_var in xrange(3))
-    descriptions, sheet_count = ([] for dummy_var in xrange(2))
+    N_SCF, N_HOMO, N_LUMO = ([] for dummy_var in range(3))
+    C_SCF, C_HOMO, C_LUMO = ([] for dummy_var in range(3))
+    descriptions, sheet_count = ([] for dummy_var in range(2))
     # determine the order of N positions to add H
     order = []
     for i in range(0, nx/2):
         order.append(nx/2-i-1)
         order.append(nx-i-1)
-    for cell in xrange(0,unit_cells):
+    for cell in range(0,unit_cells):
         N_SCF.append([])
         N_HOMO.append([])
         N_LUMO.append([])
@@ -633,7 +633,7 @@ def hydrogenate_inner_carbon(unit_cells=1, nx=5, nz=3, method="am1", optimize_ge
         tree = KDTree(atoms.get_positions())
         # find pairs of atoms that are bonded; they are bonded if their distance apart is less than 1.430
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in xrange(len(atoms))]
+        bondedTo = [[] for i in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -643,12 +643,12 @@ def hydrogenate_inner_carbon(unit_cells=1, nx=5, nz=3, method="am1", optimize_ge
         xN = [pos[i][0] for i in edge_carbon_index]
         uxN = np.unique(xN)
         # sort into pairs of atoms at the same x position
-        sorted_Ns = [[] for i in xrange(len(uxN))]
+        sorted_Ns = [[] for i in range(len(uxN))]
         for N in Ns:
             sorted_Ns[list(uxN).index(pos[N][0])].append(N)
 
         for step,position in enumerate(order):
-            for k in xrange(0,cell+1):
+            for k in range(0,cell+1):
                 # hydrogenate one nitrogen
                 iatom = sorted_Ns[position+k*cell*nx][0]
                 r0 = pos[iatom]
@@ -736,14 +736,14 @@ def hydrogenate_inner_carbon(unit_cells=1, nx=5, nz=3, method="am1", optimize_ge
     delta_E_N = []
     delta_E_C = []
 
-    for cell in xrange(0,unit_cells):
+    for cell in range(0,unit_cells):
         delta_E_N.append([])
         delta_E_C.append([])
-        delta_E_N[cell] = [N_SCF_kcal[cell][i+1]-(N_SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in xrange(0,len(N_SCF_kcal[cell])-1)]
-        delta_E_C[cell] = [C_SCF_kcal[cell][i]-(N_SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in xrange(0,len(C_SCF_kcal[cell]))]
+        delta_E_N[cell] = [N_SCF_kcal[cell][i+1]-(N_SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in range(0,len(N_SCF_kcal[cell])-1)]
+        delta_E_C[cell] = [C_SCF_kcal[cell][i]-(N_SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in range(0,len(C_SCF_kcal[cell]))]
 
         fig = plt.figure()
-        plt.plot([(i+1)*(cell+1) for i in xrange(0,len(delta_E_N[cell]))], delta_E_N[cell], 'bo-')
+        plt.plot([(i+1)*(cell+1) for i in range(0,len(delta_E_N[cell]))], delta_E_N[cell], 'bo-')
 
         plt.plot([1], [delta_E_C[cell][0]], 'ro-')
         for i in range(0,len(C_SCF_kcal[cell])-1):
@@ -767,7 +767,7 @@ def hydrogenate_random(nx=5, nz=3, method="am1", optimize_geometry=0, iter=5, di
         tree = KDTree(atoms.get_positions())
         # find pairs of atoms that are bonded; they are bonded if their distance apart is less than 1.430
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for k in xrange(len(atoms))]
+        bondedTo = [[] for k in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -827,27 +827,27 @@ def sh_vary_width(unit_cells=2, nx=5, nz_min=3, nz_max=9, method="am1", optimize
 
     data = []
 
-    for nz in xrange(nz_min,nz_max+1,2):
+    for nz in range(nz_min,nz_max+1,2):
 
         descriptions, scf_list, homo_list, lumo_list = selectively_hydrogenate_nitrogens(unit_cells,nx,nz,method,optimize_geometry,make_symmetric)
         scf = np.array(scf_list)
         scf_kcal = scf * EV_TO_KCAL
         sheet_nH2 = []
         ref_to_0 = []
-        for cell in xrange(0, unit_cells):
+        for cell in range(0, unit_cells):
             sheet_nH2.append([])
             ref_to_0.append([])
             sheet_nH2[cell] = [scf_kcal[cell][i] + (nx - i - 1) * (cell + 1) * H2_TOTAL_ENERGY for i in
-                               xrange(0, len(scf_kcal[cell]))]
-            ref_to_0[cell] = [sheet_nH2[cell][i] - sheet_nH2[cell][0] for i in xrange(0, len(sheet_nH2[cell]))]
+                               range(0, len(scf_kcal[cell]))]
+            ref_to_0[cell] = [sheet_nH2[cell][i] - sheet_nH2[cell][0] for i in range(0, len(sheet_nH2[cell]))]
 
         data.append({'nz':nz, 'ref_to_0':ref_to_0})
 
     colors = ['r','y','g','b']
-    for cell in xrange(0, unit_cells):
+    for cell in range(0, unit_cells):
         fig = plt.figure()
-        for i in xrange(0, len(data)):
-            plt.plot([k*(cell+1) for k in xrange(0,len(data[i]['ref_to_0'][cell]))], data[i]['ref_to_0'][cell], colors[i]+'o-', label="Width = "+str(data[i]['nz']))
+        for i in range(0, len(data)):
+            plt.plot([k*(cell+1) for k in range(0,len(data[i]['ref_to_0'][cell]))], data[i]['ref_to_0'][cell], colors[i]+'o-', label="Width = "+str(data[i]['nz']))
         plt.xticks(np.arange(0,(cell+1)*len(data[0]['ref_to_0'][cell]),cell+1))
         ax = fig.add_subplot(1,1,1)
         ax.set_xlabel("n H2 adsorbed")
@@ -865,7 +865,7 @@ def plot_energy(all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy
     E_plus2_species = []
     H_attachment = []
     Hplus_attachment = []
-    for cell in xrange(0,unit_cells):
+    for cell in range(0,unit_cells):
         delta_E_sheet.append([])
         delta_E_rxn.append([])
         sheet_nH2.append([])
@@ -873,16 +873,16 @@ def plot_energy(all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy
         E_plus2_species.append([])
         H_attachment.append([])
         Hplus_attachment.append([])
-        delta_E_sheet[cell] = [SCF_kcal[cell][i+1]-SCF_kcal[cell][i] for i in xrange(0,len(SCF_kcal[cell])-1)]
-        delta_E_rxn[cell] = [SCF_kcal[cell][i+1]-(SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in xrange(0,len(SCF_kcal[cell])-1)]
-        sheet_nH2[cell] = [SCF_kcal[cell][i]+(nx-i-1)*(cell+1)*H2_TOTAL_ENERGY for i in xrange(0,len(SCF_kcal[cell]))]
-        ref_to_0[cell] = [sheet_nH2[cell][i]-sheet_nH2[cell][0] for i in xrange(0,len(sheet_nH2[cell]))]
-        E_plus2_species[cell] = [all_N_SCF_energy_list[cell][i]-2*cell*all_N_HOMO_energy_list[cell][i] for i in xrange(0,len(all_N_SCF_energy_list[cell]))]
-        H_attachment[cell] = [(all_N_SCF_energy_list[cell][i+1]-all_N_SCF_energy_list[cell][i])/(2*(cell+1)) for i in xrange(0,len(all_N_SCF_energy_list[cell])-1)]
-        Hplus_attachment[cell] = [(E_plus2_species[cell][i+1]-E_plus2_species[cell][i])/(2*(cell+1)) for i in xrange(0,len(E_plus2_species[cell])-1)]
+        delta_E_sheet[cell] = [SCF_kcal[cell][i+1]-SCF_kcal[cell][i] for i in range(0,len(SCF_kcal[cell])-1)]
+        delta_E_rxn[cell] = [SCF_kcal[cell][i+1]-(SCF_kcal[cell][i]+H2_TOTAL_ENERGY) for i in range(0,len(SCF_kcal[cell])-1)]
+        sheet_nH2[cell] = [SCF_kcal[cell][i]+(nx-i-1)*(cell+1)*H2_TOTAL_ENERGY for i in range(0,len(SCF_kcal[cell]))]
+        ref_to_0[cell] = [sheet_nH2[cell][i]-sheet_nH2[cell][0] for i in range(0,len(sheet_nH2[cell]))]
+        E_plus2_species[cell] = [all_N_SCF_energy_list[cell][i]-2*cell*all_N_HOMO_energy_list[cell][i] for i in range(0,len(all_N_SCF_energy_list[cell]))]
+        H_attachment[cell] = [(all_N_SCF_energy_list[cell][i+1]-all_N_SCF_energy_list[cell][i])/(2*(cell+1)) for i in range(0,len(all_N_SCF_energy_list[cell])-1)]
+        Hplus_attachment[cell] = [(E_plus2_species[cell][i+1]-E_plus2_species[cell][i])/(2*(cell+1)) for i in range(0,len(E_plus2_species[cell])-1)]
 
         fig1 = plt.figure()
-        plt.plot([(i+1)*(cell+1) for i in xrange(0,len(delta_E_rxn[cell]))], delta_E_rxn[cell], 'bo-')
+        plt.plot([(i+1)*(cell+1) for i in range(0,len(delta_E_rxn[cell]))], delta_E_rxn[cell], 'bo-')
         plt.xticks(np.arange(cell+1,(cell+1)*len(delta_E_rxn[cell])+1,cell+1))
         ax1 = fig1.add_subplot(1,1,1)
         ax1.set_xlabel("n H2 adsorbed")
@@ -890,7 +890,7 @@ def plot_energy(all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy
         plt.savefig("cell"+str(cell+1)+" rxn energy.jpg")
 
         fig2 = plt.figure()
-        plt.plot([i*(cell+1) for i in xrange(0,len(ref_to_0[cell]))], ref_to_0[cell], 'bo-')
+        plt.plot([i*(cell+1) for i in range(0,len(ref_to_0[cell]))], ref_to_0[cell], 'bo-')
         plt.xticks(np.arange(0,(cell+1)*len(ref_to_0[cell]),cell+1))
         ax2 = fig2.add_subplot(1,1,1)
         ax2.set_xlabel("n H2 adsorbed")
@@ -898,9 +898,9 @@ def plot_energy(all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy
         plt.savefig("cell"+str(cell+1)+" ref to 0.jpg")
 
         fig3 = plt.figure()
-        plt.plot([i*2*(cell+1) for i in xrange(0,len(all_N_HOMO_energy_list[cell]))], all_N_HOMO_energy_list[cell], "bo-", label="HOMO")
-        plt.plot([i*2*(cell+1) for i in xrange(0,len(all_N_LUMO_energy_list[cell]))], all_N_LUMO_energy_list[cell], "ro-", label="LUMO")
-        plt.plot([(i+1)*2*(cell+1) for i in xrange(0,len(H_attachment[cell]))], H_attachment[cell], "go-", label="H attachment")
+        plt.plot([i*2*(cell+1) for i in range(0,len(all_N_HOMO_energy_list[cell]))], all_N_HOMO_energy_list[cell], "bo-", label="HOMO")
+        plt.plot([i*2*(cell+1) for i in range(0,len(all_N_LUMO_energy_list[cell]))], all_N_LUMO_energy_list[cell], "ro-", label="LUMO")
+        plt.plot([(i+1)*2*(cell+1) for i in range(0,len(H_attachment[cell]))], H_attachment[cell], "go-", label="H attachment")
         plt.xticks(np.arange(2*(cell+1), 2*(cell+1)*len(all_N_HOMO_energy_list[cell]),2*(cell+1)))
         ax3 = fig3.add_subplot(1,1,1)
         ax3.set_xlabel("n H atoms adsorbed")
@@ -972,7 +972,7 @@ def NH_combinations(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetri
         tree = KDTree(pos)
         # find bonded pairs
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for k in xrange(len(atoms))]
+        bondedTo = [[] for k in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -1151,7 +1151,7 @@ def plot_orbitals(data_path):
             try:
                 eorbs = data.moenergies[0]
                 efermi = (eorbs[data.homos[0]] + eorbs[data.homos[0]+1]) / 2
-                print filename+' '+str(efermi)
+                print(filename+' '+str(efermi))
                 # sets width of the gaussian we will put on each orbital energy
                 width = 1
                 # E = np.arange(np.amin(eorbs)-3.0*width, np.amax(eorbs)+3.0*width, 0.01)
@@ -1210,7 +1210,7 @@ def plot_orbitals(data_path):
                 all_sig_filled.append(sig_filled)
                 all_sig_empty.append(sig_empty)
             except AttributeError:
-                print "AttributeError"
+                print("AttributeError")
 
     for i in range(0, len(all_coeffs)-1):
 
@@ -1298,7 +1298,7 @@ def plot_orbitals(data_path):
             plt.close()
 
 def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetric=1):
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([] for dummy_var in xrange(4))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([] for dummy_var in range(4))
 
     order = []
     for i in range(0, nx/2):
@@ -1360,7 +1360,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
     plot_orbitals(ORCA_filepath+"/nitrogenate_inner_zigzag/")
 
 # def form_nitroso(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetric=1):
-#     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in xrange(4))
+#     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in range(4))
 #     cell = 0
 #
 #     order = []
@@ -1397,7 +1397,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     pos = atoms.get_positions()
 #     tree = KDTree(atoms.get_positions())
 #     list_tree = list(tree.query_pairs(1.430))
-#     bondedTo = [[] for i in xrange(len(atoms))]
+#     bondedTo = [[] for i in range(len(atoms))]
 #     for bond in list_tree:
 #         bondedTo[bond[0]].append(bond[1])
 #         bondedTo[bond[1]].append(bond[0])
@@ -1407,13 +1407,13 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     xN = [pos[i][0] for i in edge_carbon_index]
 #     uxN = np.unique(xN)
 #     # sort into pairs of atoms at the same x position
-#     sorted_Ns = [[] for i in xrange(len(uxN))]
+#     sorted_Ns = [[] for i in range(len(uxN))]
 #     for N in Ns:
 #         sorted_Ns[list(uxN).index(pos[N][0])].append(N)
 #     # bond O to N
 #     for step,position in enumerate(order):
-#         for k in xrange(0,cell+1):
-#             for m in xrange(0,2):
+#         for k in range(0,cell+1):
+#             for m in range(0,2):
 #                 iatom = sorted_Ns[position+k*cell*nx][m]
 #                 r0 = pos[iatom]
 #                 bond1 = pos[bondedTo[iatom][0]] - r0
@@ -1489,7 +1489,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     tree = KDTree(atoms.get_positions())
 #     # find pairs of atoms that are bonded; they are bonded if their distance apart is less than 1.430
 #     list_tree = list(tree.query_pairs(1.430))
-#     bondedTo = [[] for i in xrange(len(atoms))]
+#     bondedTo = [[] for i in range(len(atoms))]
 #     for bond in list_tree:
 #         bondedTo[bond[0]].append(bond[1])
 #         bondedTo[bond[1]].append(bond[0])
@@ -1497,13 +1497,13 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     xC = [pos[i][0] for i in edge_carbon_index]
 #     uxC = np.unique(xC)
 #     # sort into pairs of atoms at the same x position
-#     sorted_Cs = [[] for i in xrange(len(uxC))]
+#     sorted_Cs = [[] for i in range(len(uxC))]
 #     for C in Cs:
 #         sorted_Cs[list(uxC).index(pos[C][0])].append(C)
 #     # replace with O
 #     for step,position in enumerate(order):
-#         for k in xrange(0,cell+1):
-#             for m in xrange(0,2):
+#         for k in range(0,cell+1):
+#             for m in range(0,2):
 #                 iatom = sorted_Cs[position+k*cell*nx][m]
 #                 symbols = atoms.get_chemical_symbols()
 #                 symbols[iatom] = 'O'
@@ -1537,7 +1537,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     plot_orbitals(ORCA_filepath+"/ether/")
 
 # def form_ketone(nx=5, nz=3, method="am1", optimize_geometry=0, make_symmetric=1):
-#     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in xrange(4))
+#     all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in range(4))
 #     cell = 0
 #
 #     order = []
@@ -1568,7 +1568,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     pos = atoms.get_positions()
 #     tree = KDTree(atoms.get_positions())
 #     list_tree = list(tree.query_pairs(1.430))
-#     bondedTo = [[] for i in xrange(len(atoms))]
+#     bondedTo = [[] for i in range(len(atoms))]
 #     for bond in list_tree:
 #         bondedTo[bond[0]].append(bond[1])
 #         bondedTo[bond[1]].append(bond[0])
@@ -1578,13 +1578,13 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 #     xC = [pos[i][0] for i in edge_carbon_index]
 #     uxC = np.unique(xC)
 #     # sort into pairs of atoms at the same x position
-#     sorted_Cs = [[] for i in xrange(len(uxC))]
+#     sorted_Cs = [[] for i in range(len(uxC))]
 #     for C in Cs:
 #         sorted_Cs[list(uxC).index(pos[C][0])].append(C)
 #     # bond O to C
 #     for step,position in enumerate(order):
-#         for k in xrange(0,cell+1):
-#             for m in xrange(0,2):
+#         for k in range(0,cell+1):
+#             for m in range(0,2):
 #                 iatom = sorted_Cs[position+k*cell*nx][m]
 #                 r0 = pos[iatom]
 #                 bond1 = pos[bondedTo[iatom][0]] - r0
@@ -1626,7 +1626,7 @@ def nitrogenate_inner_zigzag(nx=5, nz=3, method="am1", optimize_geometry=0, make
 
 def form_alcohol(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=None):
 
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in xrange(4))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in range(4))
     cell = 0
 
     atoms = atoms or build_sheet(nx, nz, symmetry=1)
@@ -1653,7 +1653,7 @@ def form_alcohol(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
     pos = atoms.get_positions()
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [[] for i in xrange(len(atoms))]
+    bondedTo = [[] for i in range(len(atoms))]
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
@@ -1671,7 +1671,7 @@ def form_alcohol(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
         xC = [pos[i][0] for i in edge_carbon_index]
         uxC = np.unique(xC)
         # sort into pairs of atoms at the same x position
-        sorted_Cs = [[] for i in xrange(len(uxC))]
+        sorted_Cs = [[] for i in range(len(uxC))]
         for C in Cs:
             sorted_Cs[list(uxC).index(pos[C][0])].append(C)
         # bond O to C
@@ -1679,8 +1679,8 @@ def form_alcohol(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
             for bond in list_tree:
                 bondedTo[bond[0]].append(bond[1])
                 bondedTo[bond[1]].append(bond[0])
-            for k in xrange(0,cell+1):
-                for m in xrange(0,2):
+            for k in range(0,cell+1):
+                for m in range(0,2):
                     iatom = sorted_Cs[position+k*cell*nx][m]
                     r0 = pos[iatom]
                     bond1 = pos[bondedTo[iatom][0]] - r0
@@ -1795,7 +1795,7 @@ def form_alcohol(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
     return atoms
 
 def form_epoxide(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=None):
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in xrange(4))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in range(4))
     cell = 0
 
     atoms = atoms or build_sheet(nx, nz, symmetry=1)
@@ -1823,7 +1823,7 @@ def form_epoxide(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
     pos = atoms.get_positions()
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [[] for i in xrange(len(atoms))]
+    bondedTo = [[] for i in range(len(atoms))]
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
@@ -1841,13 +1841,13 @@ def form_epoxide(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
         xC = [pos[i][0] for i in edge_carbon_index]
         uxC = np.unique(xC)
         # sort into pairs of atoms at the same x position
-        sorted_Cs = [[] for i in xrange(len(uxC))]
+        sorted_Cs = [[] for i in range(len(uxC))]
         for C in Cs:
             sorted_Cs[list(uxC).index(pos[C][0])].append(C)
         # add epoxide bridges
         for step,position in enumerate(order):
-            for k in xrange(0,cell+1):
-                for m in xrange(0,2):
+            for k in range(0,cell+1):
+                for m in range(0,2):
                     iatom = sorted_Cs[position+k*cell*nx][m]
                     r0 = pos[iatom]
 
@@ -1961,7 +1961,7 @@ def form_epoxide(nx=5, nz=3, method="am1", optimize_geometry=0, zigzag=0, atoms=
 
 def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=None):
 
-    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in xrange(4))
+    all_N_SCF_energy_list, all_N_HOMO_energy_list, all_N_LUMO_energy_list, descriptions = ([[]] for dummy_var in range(4))
     cell = 0
 
     atoms = atoms or build_sheet(nx, nz, symmetry=1)
@@ -1977,7 +1977,7 @@ def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=No
     pos = atoms.get_positions()
     tree = KDTree(atoms.get_positions())
     list_tree = list(tree.query_pairs(1.430))
-    bondedTo = [[] for i in xrange(len(atoms))]
+    bondedTo = [[] for i in range(len(atoms))]
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
@@ -2063,7 +2063,7 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
         pos = atoms.get_positions()
         tree = KDTree(pos)
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in xrange(len(atoms))]
+        bondedTo = [[] for i in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -2098,7 +2098,7 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
         pos = atoms.get_positions()
         tree = KDTree(pos)
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in xrange(len(atoms))]
+        bondedTo = [[] for i in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -2132,7 +2132,7 @@ def random_structure(rings=1, pyrroles=1, nitrogens=1):
         pos = atoms.get_positions()
         tree = KDTree(pos)
         list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in xrange(len(atoms))]
+        bondedTo = [[] for i in range(len(atoms))]
         for bond in list_tree:
             bondedTo[bond[0]].append(bond[1])
             bondedTo[bond[1]].append(bond[0])
@@ -2265,7 +2265,7 @@ def condense_output(directory):
                 moenergies_array = data.moenergies[0]
                 homo = float(moenergies_array[data.homos[0]])
                 lumo = float(moenergies_array[data.homos[0] + 1])
-                print filename
+                print(filename)
 
                 results.append({
                     "name": filename[:-4],
@@ -2278,7 +2278,7 @@ def condense_output(directory):
                 })
 
             except AttributeError:
-                print filename + "\tAttributeError"
+                print(filename + "\tAttributeError")
 
         os.remove(filename)
 
@@ -2401,7 +2401,7 @@ class button:
 
     def print_var(self):
         string = str(horizon_sheet_variable.get())
-        print string
+        print(string)
 
 
 def build_param_frame(master):
