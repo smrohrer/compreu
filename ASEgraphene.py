@@ -15,6 +15,8 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import pickle
+import re
+import random
 # from Tkinter import *
 
 EV_TO_KCAL = 23.0605
@@ -796,24 +798,30 @@ def hydrogenate_random(nx=5, nz=3, method="am1", optimize_geometry=0, iter=5, di
             CH_bond = [0, 1.09, 0]
             atoms.append(Atom('H', pos[C] + CH_bond))
 
-            data = make_orca(atoms, filename="sheet"+str(i+1)+".inp", multiplicity="1", method=method,
-                             geometry_opt=optimize_geometry,
-                             output=ORCA_filepath+"/hydrogenate_random/sheet"+str(i+1)+".out")
-            cleanup(ORCA_filepath + "/hydrogenate_random/")
-
-            if optimize_geometry == 0:
-                xyz = open("step" + str(i + 1) + ".xyz", "w")
-                xyz.write(str(len(atoms)) + "\n")
-                xyz.write("comment\n")
-                symbols_temp = atoms.get_chemical_symbols()
-                pos_temp = atoms.get_positions()
-                for iatom in range(0, len(atoms)):
-                    xyz.write(
-                        symbols_temp[iatom] + "\t" + str(pos_temp[iatom][0]) + "\t" + str(pos_temp[iatom][1]) + "\t" + str(
-                            pos_temp[iatom][2]) + "\n")
-                xyz.close()
+            # data = make_orca(atoms, filename="sheet"+str(i+1)+".inp", multiplicity="1", method=method,
+            #                  geometry_opt=optimize_geometry,
+            #                  output=ORCA_filepath+"/hydrogenate_random/sheet"+str(i+1)+".out")
+            # cleanup(ORCA_filepath + "/hydrogenate_random/")
+            #
+            # if optimize_geometry == 0:
+            #     xyz = open("step" + str(i + 1) + ".xyz", "w")
+            #     xyz.write(str(len(atoms)) + "\n")
+            #     xyz.write("comment\n")
+            #     symbols_temp = atoms.get_chemical_symbols()
+            #     pos_temp = atoms.get_positions()
+            #     for iatom in range(0, len(atoms)):
+            #         xyz.write(
+            #             symbols_temp[iatom] + "\t" + str(pos_temp[iatom][0]) + "\t" + str(pos_temp[iatom][1]) + "\t" + str(
+            #                 pos_temp[iatom][2]) + "\n")
+            #     xyz.close()
 
             i += 1
+
+        # create an image of the sheet
+        atoms1 = atoms.copy()
+        atoms1.rotate("x", np.pi / 2.0)
+        write(str(i) + ".png", atoms1)
+
 
 def sh_vary_width(unit_cells=2, nx=5, nz_min=3, nz_max=9, method="am1", optimize_geometry=0, make_symmetric=0):
 
@@ -2040,6 +2048,117 @@ def form_carboxylic_acid(nx=5, nz=3, method="am1", optimize_geometry=0, atoms=No
 
     return atoms
 
+def random_structure(rings=1, pyrroles=1, nitrogens=1):
+
+    # start with a single benzene ring
+    atoms = Atoms('C6',
+                  positions=[[3.11488, 2.50000, 0.71000],
+                             [4.34463, 2.50000, 1.42000],
+                             [4.34463, 2.50000, 2.84000],
+                             [3.11488, 2.50000, 3.55000],
+                             [1.88513, 2.50000, 1.42000],
+                             [1.88513, 2.50000, 2.84000]])
+
+    for iring in range(0, rings-1):
+        pos = atoms.get_positions()
+        tree = KDTree(pos)
+        list_tree = list(tree.query_pairs(1.430))
+        bondedTo = [[] for i in xrange(len(atoms))]
+        for bond in list_tree:
+            bondedTo[bond[0]].append(bond[1])
+            bondedTo[bond[1]].append(bond[0])
+
+        # find a random pair of edge atoms where a new ring will be fused
+        edge_atoms = []
+        for iatom, neighbors in enumerate(bondedTo):
+            if len(neighbors) == 2:
+                edge_atoms.append(iatom)
+        C1 = -1
+        C2 = -1
+        anchor1 = []
+        while C1 < 0 or C2 < 0:
+            C1 = random.choice(edge_atoms)
+            if len(bondedTo[bondedTo[C1][0]]) == 2:
+                C2 = bondedTo[C1][0]
+                anchor1 = pos[C1] - pos[bondedTo[C1][1]]
+            elif len(bondedTo[bondedTo[C1][1]]) == 2:
+                C2 = bondedTo[C1][1]
+                anchor1 = pos[C1] - pos[bondedTo[C1][0]]
+        bond = pos[C2] - pos[C1]
+        anchor2 = - np.dot(2 * np.dot(anchor1, bond) / np.dot(bond, bond), bond) + anchor1
+        atoms.append(Atom('C', pos[C1] + anchor2))
+        C3 = len(atoms) - 1
+        atoms.append(Atom('C', pos[C2] + anchor1))
+        C4 = len(atoms) - 1
+        pos = atoms.get_positions()
+        atoms.append(Atom('C', pos[C3] + anchor1))
+        atoms.append(Atom('C', pos[C4] + anchor2))
+
+    for ipyrrole in range(pyrroles):
+        pos = atoms.get_positions()
+        tree = KDTree(pos)
+        list_tree = list(tree.query_pairs(1.430))
+        bondedTo = [[] for i in xrange(len(atoms))]
+        for bond in list_tree:
+            bondedTo[bond[0]].append(bond[1])
+            bondedTo[bond[1]].append(bond[0])
+
+        # find a random pair of edge atoms to be replaced with a single nitrogen
+        Zs = atoms.get_atomic_numbers()
+        edge_atoms = []
+        for iatom, neighbors in enumerate(bondedTo):
+            if Zs[iatom] == 6 and len(neighbors) == 2:
+                if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
+                    edge_atoms.append(iatom)
+        C1 = -1
+        C2 = -1
+        while C1 < 0 or C2 < 0:
+            C1 = random.choice(edge_atoms)
+            if len(bondedTo[bondedTo[C1][0]]) == 2:
+                C2 = bondedTo[C1][0]
+            elif len(bondedTo[bondedTo[C1][1]]) == 2:
+                C2 = bondedTo[C1][1]
+        bond = pos[C2] - pos[C1]
+        N_pos = pos[C1] + bond / 2
+        map = [False for i in range(len(atoms))]
+        map[C1] = True
+        map[C2] = True
+        atoms.pop(map.index(True))
+        map.remove(True)
+        atoms.pop(map.index(True))
+        atoms.append(Atom('N', N_pos))
+
+    for iN in range(nitrogens):
+        pos = atoms.get_positions()
+        tree = KDTree(pos)
+        list_tree = list(tree.query_pairs(1.430))
+        bondedTo = [[] for i in xrange(len(atoms))]
+        for bond in list_tree:
+            bondedTo[bond[0]].append(bond[1])
+            bondedTo[bond[1]].append(bond[0])
+
+        # find a edge atoms
+        Zs = atoms.get_atomic_numbers()
+        edge_atoms = []
+        for iatom, neighbors in enumerate(bondedTo):
+            if Zs[iatom] == 6 and len(neighbors) == 2:
+                if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
+                    edge_atoms.append(iatom)
+
+        # choose a random edge atom to replace with nitrogen
+        atom = random.choice(edge_atoms)
+        Zs[atom] = 7
+        atoms.set_atomic_numbers(Zs)
+
+    daves_super_saturate(atoms)
+
+    atoms1 = atoms.copy()
+    atoms1.rotate("x", np.pi / 2.0)
+    write("random_structure.png", atoms1)
+
+
+random_structure(rings=20, pyrroles=1, nitrogens=10)
+
 def cleanup(directory):
     os.chdir(directory)
     files = os.listdir(directory)
@@ -2336,9 +2455,8 @@ def gui_nitrogenate_all():
     unsat_int = int(unsat_var.get())
     nitrogenate_all_zig_zag(horizontal_dimension, vertical_dimension, method=selected_calc_method, optimize_geometry=selected_geometry_opt, make_symmetric=symmetry_int)
 
-draw_sheet_map(5,5)
 
-    #saturated_nitrogenate_all_zig_zag(nx_min=6, nx_max=6, nz_min=6, nz_max=6, method="am1", optimize_geometry=0, make_symmetric=1)
+#saturated_nitrogenate_all_zig_zag(nx_min=6, nx_max=6, nz_min=6, nz_max=6, method="am1", optimize_geometry=0, make_symmetric=1)
         #build_param_frame(root)
         #calc_param_frame(root)
         #button(root).bottom_buttons()
