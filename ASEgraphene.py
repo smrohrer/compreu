@@ -2259,6 +2259,8 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
         xyz.write(symbols_temp[iatom]+"\t"+str(pos_temp[iatom][0])+"\t"+str(pos_temp[iatom][1])+"\t"+str(pos_temp[iatom][2])+"\n")
     xyz.close()
 
+    return atoms1
+
 
 random_structure(rings=20, pyrroles=0, nitrogens=5, alcohols=0, nCOOH=1)
 
