@@ -6,19 +6,10 @@
 from ase import Atoms, Atom
 from ase.visualize import write
 import numpy as np
-from cclib.parser import *
-import logging
 from scipy.spatial import KDTree
-from collections import Counter
-import subprocess
 import math
 import os
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import pickle
-import re
 import random
-# from Tkinter import *
 
 EV_TO_KCAL = 23.0605
 H2_TOTAL_ENERGY = -634.997248712
@@ -26,6 +17,14 @@ H_ENERGY = -13.6
 
 np.set_printoptions(precision=3,suppress=True)
 
+def base_ring():
+    return Atoms('C6',
+                  positions=[[3.11488, 2.50000, 0.71000],
+                             [4.34463, 2.50000, 1.42000],
+                             [4.34463, 2.50000, 2.84000],
+                             [3.11488, 2.50000, 3.55000],
+                             [1.88513, 2.50000, 1.42000],
+                             [1.88513, 2.50000, 2.84000]])
 
 
     
@@ -56,47 +55,34 @@ def daves_super_saturate(atoms):
             rH = 1.09 * rH / np.linalg.norm(rH)
             atoms.append(Atom('H',  r0+rH ))
 
+def build_bonded_to(pos):
+    tree = KDTree(pos)
+    list_tree = list(tree.query_pairs(1.430))
+    bondedTo = [[] for i in range(len(pos))]
+    for bond in list_tree:
+        bondedTo[bond[0]].append(bond[1])
+        bondedTo[bond[1]].append(bond[0])
+    
+    return bondedTo
 
-def rotation_matrix(axis, theta):
-    """
-    Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
-    """
-    axis = np.asarray(axis)
-    axis = axis/math.sqrt(np.dot(axis, axis))
-    a = math.cos(theta/2.0)
-    b, c, d = -axis*math.sin(theta/2.0)
-    aa, bb, cc, dd = a*a, b*b, c*c, d*d
-    bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
-    return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
-                     [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
-                     [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
+def get_edge_atoms(atoms,bondedTo):
+    Zs = atoms.get_atomic_numbers()
+    edge_atoms = []
+    for iatom, neighbors in enumerate(bondedTo):
+        if Zs[iatom] == 6 and len(neighbors) == 2:
+            if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
+                edge_atoms.append(iatom)
 
-def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
+    return edge_atoms
 
-    # start with a single benzene ring
-    atoms = Atoms('C6',
-                  positions=[[3.11488, 2.50000, 0.71000],
-                             [4.34463, 2.50000, 1.42000],
-                             [4.34463, 2.50000, 2.84000],
-                             [3.11488, 2.50000, 3.55000],
-                             [1.88513, 2.50000, 1.42000],
-                             [1.88513, 2.50000, 2.84000]])
-
+def build_random_ring_structure(rings):
+    atoms = base_ring()
     for iring in range(0, rings-1):
         pos = atoms.get_positions()
-        tree = KDTree(pos)
-        list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in range(len(atoms))]
-        for bond in list_tree:
-            bondedTo[bond[0]].append(bond[1])
-            bondedTo[bond[1]].append(bond[0])
+        bondedTo = build_bonded_to(pos)
 
-        # find a random pair of edge atoms where a new ring will be fused
-        edge_atoms = []
-        for iatom, neighbors in enumerate(bondedTo):
-            if len(neighbors) == 2:
-                edge_atoms.append(iatom)
+        edge_atoms = get_edge_atoms(atoms,bondedTo)
+        
         C1 = -1
         C2 = -1
         anchor1 = []
@@ -118,14 +104,31 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
         atoms.append(Atom('C', pos[C3] + anchor1))
         atoms.append(Atom('C', pos[C4] + anchor2))
 
+    return atoms
+    
+
+def rotation_matrix(axis, theta):
+    """
+    Return the rotation matrix associated with counterclockwise rotation about
+    the given axis by theta radians.
+    """
+    axis = np.asarray(axis)
+    axis = axis/math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta/2.0)
+    b, c, d = -axis*math.sin(theta/2.0)
+    aa, bb, cc, dd = a*a, b*b, c*c, d*d
+    bc, ad, ac, ab, bd, cd = b*c, a*d, a*c, a*b, b*d, c*d
+    return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
+                     [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
+                     [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
+
+def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
+
+    atoms = build_random_ring_structure(rings)
+
     for ipyrrole in range(pyrroles):
         pos = atoms.get_positions()
-        tree = KDTree(pos)
-        list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in range(len(atoms))]
-        for bond in list_tree:
-            bondedTo[bond[0]].append(bond[1])
-            bondedTo[bond[1]].append(bond[0])
+        bondedTo = build_bonded_to(pos)
 
         # find a random pair of edge atoms to be replaced with a single nitrogen
         Zs = atoms.get_atomic_numbers()
@@ -159,23 +162,13 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
 
     for iN in range(nitrogens):
         pos = atoms.get_positions()
-        tree = KDTree(pos)
-        list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in range(len(atoms))]
-        for bond in list_tree:
-            bondedTo[bond[0]].append(bond[1])
-            bondedTo[bond[1]].append(bond[0])
+        bondedTo = build_bonded_to(pos)
 
-        # find a edge atoms
-        Zs = atoms.get_atomic_numbers()
-        edge_atoms = []
-        for iatom, neighbors in enumerate(bondedTo):
-            if Zs[iatom] == 6 and len(neighbors) == 2:
-                if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
-                    edge_atoms.append(iatom)
+        edge_atoms = get_edge_atoms(atoms,bondedTo)
 
         # choose a random edge atom to replace with nitrogen
         atom = random.choice(edge_atoms)
+        Zs = atoms.get_atomic_numbers()
         Zs[atom] = 7
         atoms.set_atomic_numbers(Zs)
 
@@ -184,20 +177,9 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
     ohBondAngle = 109.5 * np.pi / 180
     for iO in range(alcohols):
         pos = atoms.get_positions()
-        tree = KDTree(pos)
-        list_tree = list(tree.query_pairs(1.430))
-        bondedTo = [[] for i in range(len(atoms))]
-        for bond in list_tree:
-            bondedTo[bond[0]].append(bond[1])
-            bondedTo[bond[1]].append(bond[0])
+        bondedTo = build_bonded_to(pos)
 
-        # find a edge atoms
-        Zs = atoms.get_atomic_numbers()
-        edge_atoms = []
-        for iatom, neighbors in enumerate(bondedTo):
-            if Zs[iatom] == 6 and len(neighbors) == 2:
-                if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
-                    edge_atoms.append(iatom)
+        edge_atoms = get_edge_atoms(atoms,bondedTo)
 
         # choose a random edge atom to attach an alcohol
         atom = random.choice(edge_atoms)
@@ -255,17 +237,6 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
     daves_super_saturate(atoms)
 
     atoms1 = atoms.copy()
-    atoms1.rotate("x", np.pi / 2.0)
-    write("random_structure.png", atoms1)
-
-    xyz = open("test.xyz", "w")
-    xyz.write(str(len(atoms1))+"\n")
-    xyz.write("comment\n")
-    symbols_temp = atoms1.get_chemical_symbols()
-    pos_temp = atoms1.get_positions()
-    for iatom in range(0,len(atoms1)):
-        xyz.write(symbols_temp[iatom]+"\t"+str(pos_temp[iatom][0])+"\t"+str(pos_temp[iatom][1])+"\t"+str(pos_temp[iatom][2])+"\n")
-    xyz.close()
 
     return atoms1
 
