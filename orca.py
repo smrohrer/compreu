@@ -52,18 +52,15 @@ class Orca(Calculator):
     # Parameters corresponding to 'xc' settings.  This may be modified
     # by the user in-between loading calculators.vasp submodule and
     # instantiating the calculator object with calculators.vasp.Vasp()
-    defaults = {
+    default_params = {
         }
 
     def __init__(self, restart=None,
                  **kwargs):
         self.block_params = {}
+        self.params = {}
         for key in block_keys:
             self.block_params[key] = {}
-
-        self.input_params = {
-            }
-
         self.atoms = None
         self.positions = None
         self.run_counts = 0
@@ -71,8 +68,13 @@ class Orca(Calculator):
 
     def set(self, **kwargs):
         for key in kwargs:
-            pass
-
+            self.params[key] = kwargs[key]
+        self.set_block_params(**kwargs)
+    
+    def set_block_params(self, **kwargs):
+        for key in kwargs:
+            splitkey = key.split('_')
+            self.block_params[splitkey[0]][splitkey[1]] = kwargs[key]
 
     def initialize(self, atoms):
         """
@@ -89,15 +91,8 @@ class Orca(Calculator):
 
         # Determine the number of atoms of each atomic species
         # sorted after atomic species
-        special_setups = []
         symbols = []
         symbolcount = {}
-        if self.input_params['setups']:
-            for m in self.input_params['setups']:
-                try:
-                    special_setups.append(int(m))
-                except ValueError:
-                    continue
 
         for m, atom in enumerate(atoms):
             symbol = atom.symbol
@@ -170,4 +165,33 @@ class Orca(Calculator):
         atoms = self.atoms.copy()
         atoms.set_calculator(self)
         return atoms
+
+from ase.atoms import Atoms
+from ase.io.extxyz import read_extxyz as read_xyz, write_extxyz as write_xyz
+
+__all__ = ['read_xyz', 'write_xyz']
+
+def read_orca(fileobj, index):
+    lines = fileobj.readlines()
+    natoms = int(lines[0])
+    nimages = len(lines) // (natoms + 2)
+    for i in range(*index.indices(nimages)):
+        symbols = []
+        positions = []
+        n = i * (natoms + 2) + 2
+        for line in lines[n:n + natoms]:
+            symbol, x, y, z = line.split()[:4]
+            symbol = symbol.lower().capitalize()
+            symbols.append(symbol)
+            positions.append([float(x), float(y), float(z)])
+        yield Atoms(symbols=symbols, positions=positions)
+
+
+def write_orca(fileobj, images, comment=''):
+    symbols = images[0].get_chemical_symbols()
+    natoms = len(symbols)
+    for atoms in images:
+        fileobj.write('%d\n%s\n' % (natoms, comment))
+        for s, (x, y, z) in zip(symbols, atoms.positions):
+            fileobj.write('%-2s %22.15f %22.15f %22.15f\n' % (s, x, y, z))
 
