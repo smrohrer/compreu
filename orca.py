@@ -113,9 +113,9 @@ class Orca(Calculator):
                 inp.write('%%%s\n' % (key.upper()))
                 for innerKey, innerVal in val.items():
                     self.write_line(inp, innerKey, innerVal)
-                inp.write('end\n\n')
                 if key == 'COORDS':
                     self.write_atoms(inp, atoms)
+                inp.write('end\n\n')
         inp.close()
 
     def write_atoms(self, inp, atoms):
