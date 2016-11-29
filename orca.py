@@ -9,7 +9,7 @@ import os
 import sys
 import re
 import warnings
-from .general import Calculator
+from ase.calculators.general import Calculator
 from os.path import join, isfile, islink
 
 import numpy as np
@@ -53,6 +53,10 @@ class Orca(Calculator):
     # by the user in-between loading calculators.vasp submodule and
     # instantiating the calculator object with calculators.vasp.Vasp()
     default_params = {
+        'COORDS_CHARGE' : 0,
+        'COORDS_MULT' : 1,
+        'COORDS_CTYP' : 'XYZ',
+        'OUTPUT_XYZFILE' : True
         }
 
     def __init__(self, restart=None,
@@ -64,6 +68,7 @@ class Orca(Calculator):
         self.atoms = None
         self.positions = None
         self.run_counts = 0
+        self.set(**Orca.default_params)
         self.set(**kwargs)
 
     def set(self, **kwargs):
@@ -82,8 +87,6 @@ class Orca(Calculator):
 
         """
 
-        p = self.input_params
-
         self.all_symbols = atoms.get_chemical_symbols()
         self.natoms = len(atoms)
         self.spinpol = atoms.get_initial_magnetic_moments().any()
@@ -93,48 +96,59 @@ class Orca(Calculator):
         # sorted after atomic species
         symbols = []
         symbolcount = {}
-
         for m, atom in enumerate(atoms):
             symbol = atom.symbol
-            if m in special_setups:
-                pass
+            if symbol not in symbols:
+                symbols.append(symbol)
+                symbolcount[symbol] = 1
             else:
-                if symbol not in symbols:
-                    symbols.append(symbol)
-                    symbolcount[symbol] = 1
-                else:
-                    symbolcount[symbol] += 1
-
-
+                symbolcount[symbol] += 1
         self.converged = None
         self.setups_changed = None
 
-    def write_inp(self, atoms, **kwargs):
-        inp = open('.inp','w')
-
+    def write_inp(self, atoms, projectName="orca", **kwargs):
+        inp = open('%s.inp' % (projectName),'w')
         for key, val in self.block_params.items():
             if val:
-                inp.write('    %%%s\n' % (key.upper()))
+                inp.write('%%%s\n' % (key.upper()))
                 for innerKey, innerVal in val.items():
-                    if val is not None: # need to go through types of vals: int,float,etc
-                        pass
-                inp.write(' end\n\n')
+                    self.write_line(inp, innerKey, innerVal)
+                inp.write('end\n\n')
+                if key == 'COORDS':
+                    self.write_atoms(inp, atoms)
+        inp.close()
 
-
-        
-    def print_atoms(self, atoms):
-        out=''
+    def write_atoms(self, inp, atoms):
+        inp.write('    COORDS\n')
         for atom in atoms:
-            atom_str= '{0}\t{1}\t{2}\t{3}\n'.format(atom.symbol, atom.position[0], atom.position[1], atom.position[2])
-            out=out+atom_str
-        return out
+            s = atom.symbol
+            [x, y, z] = atom.position
+            inp.write('        %s\t%5.6f\t%5.6f\t%5.6f\n' % (s,x,y,z))
+        inp.write('    end\n')
+
+    def write_line(self, open_file, key, val):
+        # Line non-block line with these possible types:
+        #   int
+        #   float
+        #   exponential form (not sure how to do this one)
+        #   string
+        #   Bool: should just be having the keyword or not
+        if type(val) == int:
+            open_file.write('    %s %d\n' % (key, val))
+        elif type(val) == float:
+            open_file.write('    %s %5.6f\n' % (key, val))
+        elif type(val) == float:
+            open_file.write('    %s %5.2e\n' % (key, val))
+        elif type(val) == str:
+            open_file.write('    %s %s\n' % (key, val))
+        elif type(val) == bool:
+            open_file.write('    %s\n' % (key))
+        else:
+            pass
 
     def calculate(self, atoms):
-        """Generate necessary files in the working directory and run ORCA.
-
-        The method first write ORCA input files, then calls the method
-        which executes ORCA. When the ORCA run is finished energy, forces,
-        etc. are read from the ORCA output.
+        """
+        Generate necessary files in the working directory and run ORCA.
         """
 
         # Initialize calculations
@@ -145,9 +159,6 @@ class Orca(Calculator):
         # Execute 
         self.run()
         # Read output
-
-    def set_results(self, atoms):
-        pass
 
     def run(self):
         """Method which explicitely runs ORCA."""
