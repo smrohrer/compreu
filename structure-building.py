@@ -5,6 +5,7 @@
 
 from ase import Atoms, Atom
 from ase.visualize import write
+from ase.io import write
 import numpy as np
 from scipy.spatial import KDTree
 import math
@@ -174,7 +175,11 @@ def add_pyrrollic(atoms):
     atoms.pop(map.index(True))
     atoms.append(Atom('N', N_pos))
     return atoms
+
+def add_epoxide(atoms):
     
+    return atoms
+
 def build_random_ring_structure(rings):
     atoms = base_ring()
     for iring in range(0, rings-1):
@@ -205,7 +210,7 @@ def build_random_ring_structure(rings):
         atoms.append(Atom('C', pos[C4] + anchor2))
 
     return atoms
-    
+
 def rotation_matrix(axis, theta):
     """
     Return the rotation matrix associated with counterclockwise rotation about
@@ -221,7 +226,9 @@ def rotation_matrix(axis, theta):
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
 
-def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
+#def 
+
+def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, nCOOH=0):
 
     atoms = build_random_ring_structure(rings)
 
@@ -241,5 +248,10 @@ def random_structure(rings=1, pyrroles=0, nitrogens=1, alcohols=0, nCOOH=1):
     return atoms1
 
 
-random_structure(rings=20, pyrroles=0, nitrogens=5, alcohols=0, nCOOH=1)
+struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
+struct.write('test.xyz')
+#struct.set_calculator(EMT())
+#dyn = BFGS(struct, trajectory='test.traj')
+#dyn.run(fmax=0.01)
+#struct.write('opt-test.xyz')
 
