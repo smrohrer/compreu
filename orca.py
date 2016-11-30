@@ -53,10 +53,12 @@ class Orca(Calculator):
     # by the user in-between loading calculators.vasp submodule and
     # instantiating the calculator object with calculators.vasp.Vasp()
     default_params = {
+        'METHOD_METHOD' :   'HF',
+        'METHOD_RUNTYP' :   'ENERGY',
+        'BASIS_BASIS'   :   'STO_3G',
         'COORDS_CHARGE' : 0,
         'COORDS_MULT' : 1,
-        'COORDS_CTYP' : 'XYZ',
-        'OUTPUT_XYZFILE' : True
+        'COORDS_CTYP' : 'XYZ'
         }
 
     def __init__(self, restart=None,
@@ -130,7 +132,8 @@ class Orca(Calculator):
         # Line non-block line with these possible types:
         #   int
         #   float
-        #   exponential form (not sure how to do this one)
+        #   exponential form (not sure how to do this one, 
+        #       currenty just a redundent elif)
         #   string
         #   Bool: should just be having the keyword or not
         if type(val) == int:
@@ -155,6 +158,7 @@ class Orca(Calculator):
         self.initialize(atoms)
 
         # Write input
+        self.write_inp(atoms)
 
         # Execute 
         self.run()
@@ -176,33 +180,3 @@ class Orca(Calculator):
         atoms = self.atoms.copy()
         atoms.set_calculator(self)
         return atoms
-
-from ase.atoms import Atoms
-from ase.io.extxyz import read_extxyz as read_xyz, write_extxyz as write_xyz
-
-__all__ = ['read_xyz', 'write_xyz']
-
-def read_orca(fileobj, index):
-    lines = fileobj.readlines()
-    natoms = int(lines[0])
-    nimages = len(lines) // (natoms + 2)
-    for i in range(*index.indices(nimages)):
-        symbols = []
-        positions = []
-        n = i * (natoms + 2) + 2
-        for line in lines[n:n + natoms]:
-            symbol, x, y, z = line.split()[:4]
-            symbol = symbol.lower().capitalize()
-            symbols.append(symbol)
-            positions.append([float(x), float(y), float(z)])
-        yield Atoms(symbols=symbols, positions=positions)
-
-
-def write_orca(fileobj, images, comment=''):
-    symbols = images[0].get_chemical_symbols()
-    natoms = len(symbols)
-    for atoms in images:
-        fileobj.write('%d\n%s\n' % (natoms, comment))
-        for s, (x, y, z) in zip(symbols, atoms.positions):
-            fileobj.write('%-2s %22.15f %22.15f %22.15f\n' % (s, x, y, z))
-
