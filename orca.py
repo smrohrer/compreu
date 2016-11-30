@@ -49,9 +49,6 @@ block_keys = [
 class Orca(Calculator):
     name = 'Orca'
 
-    # Parameters corresponding to 'xc' settings.  This may be modified
-    # by the user in-between loading calculators.vasp submodule and
-    # instantiating the calculator object with calculators.vasp.Vasp()
     default_params = {
         'METHOD_METHOD' :   'HF',
         'METHOD_RUNTYP' :   'ENERGY',
