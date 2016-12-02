@@ -248,10 +248,6 @@ def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, nCOOH=0):
     return atoms1
 
 
-struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
-struct.write('test.xyz')
-#struct.set_calculator(EMT())
-#dyn = BFGS(struct, trajectory='test.traj')
-#dyn.run(fmax=0.01)
-#struct.write('opt-test.xyz')
+#struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
+#struct.write('test.xyz')
 
