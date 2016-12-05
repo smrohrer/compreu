@@ -43,8 +43,6 @@ def daves_super_saturate(atoms):
         Z = Zs[iatom]
         if (Z,nbonds) == (6,2):
             print("we should add H to atom ", iatom)
-            
-
             r0 = pos[iatom, :]
             bond1 = pos[ bondedTo[iatom][0] , : ] - r0
             bond2 = pos[ bondedTo[iatom][1],   :]  -r0
@@ -59,7 +57,6 @@ def build_bonded_to(pos):
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
-    
     return bondedTo
 
 def get_edge_atoms(atoms,bondedTo):
@@ -69,7 +66,6 @@ def get_edge_atoms(atoms,bondedTo):
         if Zs[iatom] == 6 and len(neighbors) == 2:
             if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
                 edge_atoms.append(iatom)
-
     return edge_atoms
 
 def add_alcohol(atoms):
@@ -176,8 +172,38 @@ def add_pyrrollic(atoms):
     atoms.append(Atom('N', N_pos))
     return atoms
 
-def add_epoxide(atoms):
+def add_epoxide(atoms,basal):
+    pos = atoms.get_positions()
+    bonded_to = build_bonded_to(pos)
     
+    bond_length = 1.43
+    epoxide_dist = 1.24
+
+    # Find a random pair of adjacent atoms to get an epoxide
+    # Only if pair is a fully exposed edge (eg armchair) place in plane
+
+    C1 = random.choice(basal)
+    C2 = random.choice(bonded_to[C1])
+    print(C1)
+    print(C2)
+    middle_pos = (pos[C1] + pos[C2]) / 2
+    # If the selected carbons are both edge (ie have only 2 bonds)
+    if len(bonded_to[C1]) == 2 and len(bonded_to[C2]) == 2:
+        # Place epoxide in plane of sheet
+        carbs=[C1,C2,bonded_to[C1][0],bonded_to[C1][1],bonded_to[C2][0],bonded_to[C2][1]]
+        carbs=np.unique(carbs)
+        avPos = 0
+        for carb in carbs:
+            avPos += pos[carb]
+        avPos/=len(carbs)
+        bond_vect = middle_pos - avPos
+        bond_vect = epoxide_dist * bond_vect / np.linalg.norm(bond_vect)
+        o_pos = middle_pos + bond_vect
+    else:
+        # Place above or below sheet
+        o_pos = middle_pos
+        o_pos[1] = o_pos[1] + random.choice([-1, 1]) * epoxide_dist
+    atoms.append(Atom('O', o_pos))
     return atoms
 
 def build_random_ring_structure(rings):
@@ -228,23 +254,26 @@ def rotation_matrix(axis, theta):
 
 #def 
 
-def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, nCOOH=0):
+def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, COOH=0, epoxide=0):
 
     atoms = build_random_ring_structure(rings)
-
     for ipyrrole in range(pyrroles):
         atoms = add_pyrroles(atoms)
-    for iN in range(nitrogens):
+    for iN in range(nitrogens): # pyridinic N
         atoms = add_pyridinic(atoms)
-    for iO in range(alcohols):
+    basal_Cs = range(len(atoms))
+    for i,j in enumerate(atoms.get_chemical_symbols()):
+        if j == 'N':
+            basal_Cs.pop(i)
+    for iOH in range(alcohols):
         atoms = add_alcohol(atoms)
-    for iO in range(nCOOH):
+    for iCOOH in range(COOH):
         atoms = add_COOH(atoms) 
+    for iEpoxi in range(epoxide):
+        atoms = add_epoxide(atoms,basal_Cs)
 
     daves_super_saturate(atoms)
-
     atoms1 = atoms.copy()
-
     return atoms1
 
 
