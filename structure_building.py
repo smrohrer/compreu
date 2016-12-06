@@ -43,8 +43,6 @@ def daves_super_saturate(atoms):
         Z = Zs[iatom]
         if (Z,nbonds) == (6,2):
             print("we should add H to atom ", iatom)
-            
-
             r0 = pos[iatom, :]
             bond1 = pos[ bondedTo[iatom][0] , : ] - r0
             bond2 = pos[ bondedTo[iatom][1],   :]  -r0
@@ -59,7 +57,6 @@ def build_bonded_to(pos):
     for bond in list_tree:
         bondedTo[bond[0]].append(bond[1])
         bondedTo[bond[1]].append(bond[0])
-    
     return bondedTo
 
 def get_edge_atoms(atoms,bondedTo):
@@ -69,7 +66,6 @@ def get_edge_atoms(atoms,bondedTo):
         if Zs[iatom] == 6 and len(neighbors) == 2:
             if Zs[neighbors[0]] == 6 and Zs[neighbors[1]] == 6:
                 edge_atoms.append(iatom)
-
     return edge_atoms
 
 def add_alcohol(atoms):
@@ -85,6 +81,7 @@ def add_alcohol(atoms):
     bond2 = pos[bondedTo[atom][1]] - r0
     CO_bond = -(bond1 + bond2)
     CO_bond = coBondLength * CO_bond / np.linalg.norm(CO_bond)
+    atoms.append(Atom('O', r0 + CO_bond))
     rotation = [[np.cos(ohBondAngle), 0, np.sin(ohBondAngle)],
                 [0, 1, 0],
                 [-np.sin(ohBondAngle), 0, np.cos(ohBondAngle)]]
@@ -176,8 +173,36 @@ def add_pyrrollic(atoms):
     atoms.append(Atom('N', N_pos))
     return atoms
 
-def add_epoxide(atoms):
+def add_epoxide(atoms,basal):
+    pos = atoms.get_positions()
+    bonded_to = build_bonded_to(pos)
     
+    bond_length = 1.43
+    epoxide_dist = 1.24
+
+    # Find a random pair of adjacent atoms to get an epoxide
+    # Only if pair is a fully exposed edge (eg armchair) place in plane
+
+    C1 = random.choice(basal)
+    C2 = random.choice(bonded_to[C1])
+    middle_pos = (pos[C1] + pos[C2]) / 2
+    # If the selected carbons are both edge (ie have only 2 bonds)
+    if len(bonded_to[C1]) == 2 and len(bonded_to[C2]) == 2:
+        # Place epoxide in plane of sheet
+        carbs=[C1,C2,bonded_to[C1][0],bonded_to[C1][1],bonded_to[C2][0],bonded_to[C2][1]]
+        carbs=np.unique(carbs)
+        avPos = 0
+        for carb in carbs:
+            avPos += pos[carb]
+        avPos/=len(carbs)
+        bond_vect = middle_pos - avPos
+        bond_vect = epoxide_dist * bond_vect / np.linalg.norm(bond_vect)
+        o_pos = middle_pos + bond_vect
+    else:
+        # Place above or below sheet
+        o_pos = middle_pos
+        o_pos[1] = o_pos[1] + random.choice([-1, 1]) * epoxide_dist
+    atoms.append(Atom('O', o_pos))
     return atoms
 
 def build_random_ring_structure(rings):
@@ -226,28 +251,46 @@ def rotation_matrix(axis, theta):
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
 
-#def 
 
-def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, nCOOH=0):
-
+def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, COOH=0, epoxide=0):
     atoms = build_random_ring_structure(rings)
-
     for ipyrrole in range(pyrroles):
-        atoms = add_pyrroles(atoms)
-    for iN in range(nitrogens):
+        atoms = add_pyrrollic(atoms)
+    for iN in range(nitrogens): # pyridinic N
         atoms = add_pyridinic(atoms)
-    for iO in range(alcohols):
+    basal_Cs = range(len(atoms))
+    to_pop = []
+    # Find all basal carbons. Remove from index list from last to first
+    for i,j in enumerate(atoms.get_chemical_symbols()):
+        if j == 'N':
+            to_pop.append(i)
+    to_pop.reverse()
+    for i in to_pop:
+        basal_Cs.pop(i)
+    for iOH in range(alcohols):
         atoms = add_alcohol(atoms)
-    for iO in range(nCOOH):
+    for iCOOH in range(COOH):
         atoms = add_COOH(atoms) 
+    for iEpoxi in range(epoxide):
+        atoms = add_epoxide(atoms,basal_Cs)
 
     daves_super_saturate(atoms)
-
     atoms1 = atoms.copy()
-
     return atoms1
 
-
-#struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
-#struct.write('test.xyz')
+def name_structure(atoms, rings, pyrroles, nitrogens, alcohols, COOH, epoxide):
+    chem_str = atoms.get_chemical_formula()
+    struct_input = '_r{0}'.format(rings)
+    if pyrroles != 0:
+        struct_input += '_5py{0}'.format(pyrroles)
+    if nitrogens != 0:
+        struct_input += '_6py{0}'.format(nitrogens)
+    if alcohols != 0:
+        struct_input += '_OH{0}'.format(alcohols) 
+    if COOH != 0:
+        struct_input += '_COOH{0}'.format(COOH)
+    if epoxide != 0:
+        struct_input += '_ep{0}'.format(epoxide)
+    final_str = chem_str + struct_input
+    return final_str
 

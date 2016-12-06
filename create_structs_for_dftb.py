@@ -1,10 +1,18 @@
-from ase.calculators.dftb import Dftb
-from structure_building import random_structure
+from dftb_wrapper import dftb_calc
+from structure_building import random_structure, name_structure
 
 
-struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
+# ref: struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, COOH=0)
 
-calc = Dftb(label='')
+kwords = {'rings' : 8,
+          'pyrroles' : 0,
+          'nitrogens' : 2,
+          'alcohols' : 1,
+          'COOH' : 1,
+          'epoxide' : 0}
 
-struct.set_calculator(calc)
-calc.calculate(system)
+test = random_structure(**kwords)
+name = name_structure(test,**kwords)
+
+path = '/home/egottlie/dftb_calcs/'
+calc = dftb_calc(path,name,test)
