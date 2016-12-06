@@ -184,8 +184,6 @@ def add_epoxide(atoms,basal):
 
     C1 = random.choice(basal)
     C2 = random.choice(bonded_to[C1])
-    print(C1)
-    print(C2)
     middle_pos = (pos[C1] + pos[C2]) / 2
     # If the selected carbons are both edge (ie have only 2 bonds)
     if len(bonded_to[C1]) == 2 and len(bonded_to[C2]) == 2:
@@ -276,7 +274,19 @@ def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, COOH=0, epoxi
     atoms1 = atoms.copy()
     return atoms1
 
-
-#struct = random_structure(rings=10, pyrroles=0, nitrogens=2, alcohols=0, nCOOH=0)
-#struct.write('test.xyz')
+def name_structure(atoms, rings, pyrroles, nitrogens, alcohols, COOH, epoxide):
+    chem_str = atoms.get_chemical_formula()
+    struct_input = '_r{0}'.format(rings)
+    if pyrroles != 0:
+        struct_input += '_5py{0}'.format(pyrroles)
+    if nitrogens != 0:
+        struct_input += '_6py{0}'.format(nitrogens)
+    if alcohols != 0:
+        struct_input += '_OH{0}'.format(alcohols) 
+    if COOH != 0:
+        struct_input += '_COOH{0}'.format(COOH)
+    if epoxide != 0:
+        struct_input += '_ep{0}'.format(epoxide)
+    final_str = chem_str + struct_input
+    return final_str
 
