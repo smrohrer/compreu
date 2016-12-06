@@ -251,19 +251,22 @@ def rotation_matrix(axis, theta):
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
 
-#def 
 
 def random_structure(rings=1, pyrroles=0, nitrogens=0, alcohols=0, COOH=0, epoxide=0):
-
     atoms = build_random_ring_structure(rings)
     for ipyrrole in range(pyrroles):
-        atoms = add_pyrroles(atoms)
+        atoms = add_pyrrollic(atoms)
     for iN in range(nitrogens): # pyridinic N
         atoms = add_pyridinic(atoms)
     basal_Cs = range(len(atoms))
+    to_pop = []
+    # Find all basal carbons. Remove from index list from last to first
     for i,j in enumerate(atoms.get_chemical_symbols()):
         if j == 'N':
-            basal_Cs.pop(i)
+            to_pop.append(i)
+    to_pop.reverse()
+    for i in to_pop:
+        basal_Cs.pop(i)
     for iOH in range(alcohols):
         atoms = add_alcohol(atoms)
     for iCOOH in range(COOH):
