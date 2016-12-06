@@ -81,6 +81,7 @@ def add_alcohol(atoms):
     bond2 = pos[bondedTo[atom][1]] - r0
     CO_bond = -(bond1 + bond2)
     CO_bond = coBondLength * CO_bond / np.linalg.norm(CO_bond)
+    atoms.append(Atom('O', r0 + CO_bond))
     rotation = [[np.cos(ohBondAngle), 0, np.sin(ohBondAngle)],
                 [0, 1, 0],
                 [-np.sin(ohBondAngle), 0, np.cos(ohBondAngle)]]

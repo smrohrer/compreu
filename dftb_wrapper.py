@@ -3,8 +3,15 @@ import os
 
 def dftb_calc(path, calc_folder, sys):
     os.chdir(path)
-    if not os.path.exists(calc_folder):
-        os.makedirs(calc_folder)
+    i = 0
+    if os.path.exists(calc_folder):
+        calc_folder += '_{0}'.format(i)
+    while os.path.exists(calc_folder):
+        i += 1
+        last_underscore = calc_folder.rfind('_')
+        calc_folder = calc_folder[:last_underscore+1] + str(i)
+
+    os.makedirs(calc_folder)
     os.chdir(calc_folder)
     # Assuming C and H are always present
     args = {}
@@ -25,6 +32,7 @@ def dftb_calc(path, calc_folder, sys):
                 **args)
 
     sys.set_calculator(calc)
+    sys.write('geo_start.xyz')
     calc.calculate(sys)
     os.chdir(os.pardir)
     return calc
