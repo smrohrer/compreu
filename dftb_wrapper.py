@@ -1,4 +1,5 @@
 from ase.calculators.dftb import Dftb
+from read_alt import read_alt
 import os
 
 def dftb_calc(path, calc_folder, sys):
@@ -23,6 +24,7 @@ def dftb_calc(path, calc_folder, sys):
     calc = Dftb(label=calc_folder,
                 atoms=sys,
                 run_manyDftb_steps=True,
+#                WriteResultsTag='Yes',
                 Driver_='ConjugateGradient',
                 Driver_MaxForceComponent='1E-4',
                 Driver_MaxSteps=1000,
@@ -34,5 +36,7 @@ def dftb_calc(path, calc_folder, sys):
     sys.set_calculator(calc)
     sys.write('geo_start.xyz')
     calc.calculate(sys)
+    res = read_alt()
+    print res
     os.chdir(os.pardir)
     return calc

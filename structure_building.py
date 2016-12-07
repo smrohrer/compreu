@@ -42,7 +42,7 @@ def daves_super_saturate(atoms):
         nbonds = len( bondedTo[iatom] )
         Z = Zs[iatom]
         if (Z,nbonds) == (6,2):
-            print("we should add H to atom ", iatom)
+            #print("we should add H to atom ", iatom)
             r0 = pos[iatom, :]
             bond1 = pos[ bondedTo[iatom][0] , : ] - r0
             bond2 = pos[ bondedTo[iatom][1],   :]  -r0
