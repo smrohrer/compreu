@@ -1,5 +1,5 @@
 from ase.calculators.dftb import Dftb
-from read_alt import read_alt
+#from read_alt import read_alt
 import os
 
 def dftb_calc(path, calc_folder, sys):
@@ -36,7 +36,5 @@ def dftb_calc(path, calc_folder, sys):
     sys.set_calculator(calc)
     sys.write('geo_start.xyz')
     calc.calculate(sys)
-    res = read_alt()
-    print res
     os.chdir(os.pardir)
     return calc
